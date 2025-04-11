@@ -1,1 +1,16 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+input,
+textarea,
+select {
+    @apply border-1 border-gray-400 shadow-sm bg-white rounded w-full;
+}
+
+.booking-form-element {
+    @apply mx-20 my-3 text-lg;
+}
