@@ -22,18 +22,22 @@ const BookingForm = () => {
         return res;
     }
 
-    // Dropdown with array input
-    const Dropdown = (props) => {
-        const { label } = props;
-        const { options } = props;
+    // Dropdown with array Dropdown
+    interface DropdownProps {
+        label: string;
+        options: string[];
+    }
+    
+    const Dropdown = (props: DropdownProps) => {
+        const { label, options } = props;
         return(
-            <div className='booking-form-element flex-1'>
+            <div className='booking-form-element text-lg flex-1'>
                 <label>{ label }</label>
                 <br/>
                 <select className='h-[35px]'>
                     {options.map((option, index) => (
-                        <option key={index} value={option}>
-                            {option}
+                        <option key={ index } value={ option }>
+                            { option }
                         </option>
                     ))};
                 </select>
@@ -42,12 +46,18 @@ const BookingForm = () => {
     }
 
     // Text input
-    const TextInput = (props) => {
+    interface TextInputProps {
+        label: string;
+        type: string;
+    }
+
+    const TextInput = (props: TextInputProps) => {
+        const { label, type } = props;
         return (
-            <div className='booking-form-element'>
-                <label>{props.label}</label>
+            <div className='booking-form-element text-lg'>
+                <label>{ label }</label>
                 <br/>
-                <input className='h-[35px]' type={props.type}></input>
+                <input className='h-[35px]' type={ type }></input>
             </div>
         )
     }
@@ -59,42 +69,61 @@ const BookingForm = () => {
 
     return (
         <div>
-            <form className='bg-amber-50 w-4/5 flex flex-col mx-auto my-[100px] py-[50px] rounded-4xl' id='booking-form'>
+            <form className='bg-amber-50 w-4/5 flex flex-col mx-auto my-[100px] py-[50px] rounded-4xl' 
+                id='booking-form'
+            >
                 {/* HEADER */}
-                <h1 className='text-center text-4xl mx-20 my-3'>Reserve a room</h1>
+                <h1 className='booking-form-element text-center text-4xl'>Reserve a room</h1>
 
                 {/* Room - dropdown */}
-                <Dropdown label='Select a room' options={rooms}/>
+                <Dropdown label='Select a room' 
+                    options={ rooms }/
+                >
                 
-                {/* Date */}
+                {/* Date - how should date be handled? */}
 
                 {/* Time - dropdown, start time cannot be after end time, show duration */}
                 <div className='flex flex-col-2'> 
-                    <Dropdown label='Start Time' options={times('2:00', '14:00')}/>
-                    <Dropdown label='End Time' options={times('2:00', '14:00')}/>
+                    {/* Start time */}
+                    <Dropdown label='Start Time' 
+                        options={ times('2:00', '14:00') }
+                    />
+
+                    {/* End time */}
+                    <Dropdown label='End Time' 
+                        options={ times('2:00', '14:00') }
+                    />
+                    
                     {/* Duration - calculated from start time and end time */}
+
                 </div>
 
                 {/* Club name - text */}
-                <TextInput label='Club Name'/>
+                <TextInput label='Club Name' 
+                    type='text'
+                />
 
                 {/* Event Title - text */}
-                <TextInput label='Event Title'/>
+                <TextInput label='Event Title' 
+                    type='text'
+                />
 
                 {/* Event Description - text area */}
-                <div className='booking-form-element'>
+                <div className='booking-form-element text-lg'>
                     <label>Event Description</label>
                     <br/>
                     <textarea className='h-[200px]'></textarea>
                 </div>
 
                 {/* Expected Number of Guests - number */}
-                <TextInput label='Expected Number of Guests' type='number'/>
+                <TextInput label='Expected Number of Guests' 
+                    type='number'
+                />
 
                 {/* Tags */}
 
                 {/* button - submit will tell you if booking was successful, and if not why (missing a field, time slot filled) */}
-                <button className='h-[40px] w-[200px] border-1 mx-auto my-4 bg-white hover:bg-amber-300' onClick={ submitBookingForm }>Submit</button>
+                <button onClick={ submitBookingForm }>Submit</button>
             </form>
         </div>
     )
