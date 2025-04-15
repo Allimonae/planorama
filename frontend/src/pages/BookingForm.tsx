@@ -2,18 +2,40 @@ import React, { useEffect, useState } from 'react';
 // import hunterCampus from '../assets/hunter-campus-2001415976.jpg'
 
 const BookingForm = () => {
-    const rooms = ['Room 1', 'Room 2', 'Room 3'] // should only list rooms that are available
-    
+    const rooms = ['Room 1', 'Room 2', 'Room 3']; // should only list rooms that are available
+    const date = 'Monday April 14, 2025';
+    const [bookingData, setBookingData] = useState({
+        room: '',
+        date: '',
+        start: '',
+        end: '',
+        clubName: '',
+        eventTitle: '',
+        eventDescription: '',
+        numGuests: '',
+        dateCreated: ''
+    });
+
     // Times array given start and end time
     const times = (start:string, end:string) => {
-        let res = [];
+        const res = [];
         const mins = ['00', '30'];
 
         let [startHour, startMin] = start.split(':').map(num => parseInt(num));
         const [endHour, endMin] = end.split(':').map(num => parseInt(num));
 
-        let i = 0
+        let i = 0;
         while (startHour < endHour) {
+            // let meridiem;
+            // let hour = startHour;
+            // if (hour < 12) {
+            //     meridiem = 'AM';
+            //     hour = hour === 0 ? 12 : hour;
+            // } else {
+            //     meridiem = 'PM';
+            //     hour -= 12;
+            // }
+
             res.push(startHour + ':' + mins[i])
             i ++;
             if (i % 2 === 0){
@@ -26,6 +48,7 @@ const BookingForm = () => {
     }
 
     const Duration = (start:string, end:string) => {
+        let res;
         if (start && end) {
             const [startHour, startMin] = start.split(':').map(num => parseInt(num));
             const [endHour, endMin] = end.split(':').map(num => parseInt(num));
@@ -33,9 +56,7 @@ const BookingForm = () => {
             if (endHour < startHour || 
                 (endHour == startHour && endMin <= startMin)) 
             {
-                return (
-                    <p>invalid</p>
-                )
+                res = "Invalid times.";
             } else {
                 let hour = endHour - startHour;
                 let min = endMin - startMin;
@@ -44,20 +65,19 @@ const BookingForm = () => {
                     hour -= 1;
                 }
                 if (hour && min) {
-                    return (<p>{hour} hr {min} min</p>)
-                }
-                if (min) {
-                    return (<p>{min} min</p>)
-                }
-                if (hour) {
-                    return (<p>{hour} hr</p>)
+                    res = `${hour} hr ${min} min`;
+                } else {
+                    if (min) {
+                        res = `${min} min`;
+                    } else if (hour) {
+                        res = `${hour} hr`;
+                    }
                 }
             }
         } else {
-            return (
-                <p>Please select start and end time</p>
-            )
+            res = 'Please select start and end time.'
         }
+        return res
     }
 
     // Dropdown with array Dropdown
@@ -71,7 +91,7 @@ const BookingForm = () => {
     const Dropdown = (props: DropdownProps) => {
         const { id, label, options, value } = props;
         return(
-            <div className='booking-form-element text-lg flex-1'>
+            <div>
                 <label htmlFor={id}>{label}</label>
                 <select 
                     className='h-[35px]' 
@@ -79,7 +99,9 @@ const BookingForm = () => {
                     name={id} 
                     value={value} 
                     onChange={handleChange}
+                    required
                 >
+                    <option value="" disabled>Choose an option</option>
                     {options.map((option, index) => (
                         <option key={index} value={option}>
                             {option}
@@ -89,18 +111,6 @@ const BookingForm = () => {
             </div>
         );
     };
-
-    const [bookingData, setBookingData] = useState({
-        room: '',
-        // date: '',
-        start: '',
-        end: '',
-        clubName: '',
-        eventTitle: '',
-        eventDescription: '',
-        numGuests: '',
-        // dateCreated: ''
-    });
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -117,11 +127,14 @@ const BookingForm = () => {
     }, [bookingData]);
 
     // Handle Submit
-    // const handleSubmit = (e) => {
-    //     e.preventDefault();
-    //     const {room, date, start, end} = e.target;
-    //     setBookingData
-    // }
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        setBookingData((prevData) => ({
+            ...prevData,
+            dateCreated: new Date().toISOString()
+        }));
+        console.log('Form submitted', bookingData)
+    }
 
     return (
         <div>
@@ -131,37 +144,57 @@ const BookingForm = () => {
                 <form 
                     className='flex flex-col' 
                     id='booking-form'
+                    onSubmit={handleSubmit}
                 >
-                    {/* Room - dropdown */}
-                    <Dropdown 
-                        id='room'
-                        value={bookingData.room}
-                        label='Select a room' 
-                        options={rooms}
-                    />
-                    
-                    {/* Date - how should date be handled? */}
+                    <div className='flex flex-col-2'>
+                        {/* Date - how should date be handled? */}
+                        <div className='booking-form-element text-lg flex-1'>
+                            <label htmlFor='date'>Date</label>
+                            <input 
+                                className='h-[35px] px-2'
+                                id='date'
+                                name='date'
+                                type='text'
+                                value={date}
+                                onChange={handleChange}>
+                            </input>
+                        </div>
 
-                    {/* Time - dropdown, start time cannot be after end time, show duration */}
-                    <div className='flex flex-col-3'> 
-                        {/* Start time */}
-                        <Dropdown 
-                            id='start'
-                            value={bookingData.start}
-                            label='Start Time' 
-                            options={times('2:00', '14:00')}
-                        />
-
-                        {/* End time */}
-                        <Dropdown 
-                            id='end'
-                            value={bookingData.end}
-                            label='End Time' 
-                            options={times('2:00', '14:00')}
-                        />
+                        {/* Room - Dropdown */}
+                        <div className='booking-form-element text-lg flex-1'>
+                            <Dropdown 
+                                id='room'
+                                value={bookingData.room}
+                                label='Select a room' 
+                                options={rooms}
+                            />
+                        </div>
                         
-                        {/* Duration - calculated from start time and end time */}
-                        <p className='booking-form-element text-lg flex-1'>Duration<br/>{Duration(bookingData.start, bookingData.end)}</p>
+                    </div>
+                    
+                    {/* Time - dropdown, start time cannot be after end time, show duration */}
+                    <div className='flex flex-col-2'> 
+                        {/* Start time */}
+                        <div className='booking-form-element text-lg flex-1'>
+                            <Dropdown 
+                                id='start'
+                                value={bookingData.start}
+                                label='Start Time' 
+                                options={times('0:00', '24:00')}
+                            />
+                        </div>
+                        
+                        {/* End time */}
+                        <div className='booking-form-element text-lg flex-1'>
+                            <Dropdown 
+                                id='end'
+                                value={bookingData.end}
+                                label='End Time' 
+                                options={times('0:00', '24:00')}
+                            />
+                            <p>{Duration(bookingData.start, bookingData.end)}</p>
+                        </div>
+
                     </div>
 
                     {/* Club name - text */}
@@ -174,6 +207,7 @@ const BookingForm = () => {
                             type='text'
                             value={bookingData.clubName}
                             onChange={handleChange}
+                            required
                         />
                     </div>
 
@@ -187,6 +221,7 @@ const BookingForm = () => {
                             type='text'
                             value={bookingData.eventTitle}
                             onChange={handleChange}
+                            required
                         />
                     </div>
 
@@ -199,6 +234,7 @@ const BookingForm = () => {
                             name='eventDescription'
                             value={bookingData.eventDescription}
                             onChange={handleChange}
+                            required
                         />
                     </div>
 
@@ -213,21 +249,28 @@ const BookingForm = () => {
                             min='0'
                             value={bookingData.numGuests}
                             onChange={handleChange}
+                            required
                         />
                     </div>
 
-                    <p>Room: {bookingData.room}</p>
-                    <p>Start: {bookingData.start}</p>
-                    <p>End: {bookingData.end}</p>
-                    <p>Club Name: {bookingData.clubName}</p>
-                    <p>Event Title: {bookingData.eventTitle}</p>
-                    <p>Event Description: {bookingData.eventDescription}</p>
-                    <p>Num Guests: {bookingData.numGuests}</p>
+                    {/* Confirming form handling, comment out later */}
+                    {/* <div className="booking-form-element">
+                        <h1>Testing, comment out later</h1>
+                        <p>Room: {bookingData.room}</p>
+                        <p>Date: {bookingData.date}</p>
+                        <p>Start: {bookingData.start}</p>
+                        <p>End: {bookingData.end}</p>
+                        <p>Club Name: {bookingData.clubName}</p>
+                        <p>Event Title: {bookingData.eventTitle}</p>
+                        <p>Event Description: {bookingData.eventDescription}</p>
+                        <p>Num Guests: {bookingData.numGuests}</p>
+                        <p>Date Created: {bookingData.dateCreated}</p>
+                    </div> */}
 
                     {/* Tags - optional */}
 
                     {/* button - submit will tell you if booking was successful, and if not why (missing a field, time slot filled) */}
-                    <button>Submit</button>
+                    <button type='submit'>Submit</button>
                 </form>
             </div>
         </div>
