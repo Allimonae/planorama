@@ -25,11 +25,11 @@ const Home = () => {
         numGuests: '',
         dateCreated: ''
     }
-    const renderEventContent = () => {
-        return(
-            <b>{eventInfo.title}</b>
-        )
-    }
+    // const renderEventContent = () => {
+    //     return(
+    //         <b>{eventInfo.title}</b>
+    //     )
+    // }
 
     return (
         <div>
