@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 // import hunterCampus from '../assets/hunter-campus-2001415976.jpg'
 
 const BookingForm = () => {
+    const location = useLocation();
+    const date = location.state?.date;
+
+    const navigate = useNavigate();
+
     const rooms = ['Room 1', 'Room 2', 'Room 3']; // should only list rooms that are available
-    const date = 'Monday April 14, 2025';
+    
     const [bookingData, setBookingData] = useState({
         room: '',
-        date: '',
+        date: date,
         start: '',
         end: '',
         clubName: '',
@@ -127,7 +133,7 @@ const BookingForm = () => {
     }, [bookingData]);
 
     // Handle Submit
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
         setBookingData((prevData) => ({
             ...prevData,
@@ -138,7 +144,14 @@ const BookingForm = () => {
 
     return (
         <div>
-            <div className='bg-amber-50 w-4/5 mx-auto my-24 flex flex-col py-[50px] rounded-3xl shadow-2xl'>
+            <div className="w-full">
+                <button 
+                    className='m-3'
+                    onClick={() => navigate(-1)}
+                >Back</button>
+            </div>
+            
+            <div className='bg-amber-50 w-4/5 mx-auto flex flex-col py-[50px] rounded-3xl shadow-2xl'>
                 {/* HEADER */}
                 <h1 className='booking-form-element text-center text-4xl font-bold'>Reserve a room</h1>
                 <form 
