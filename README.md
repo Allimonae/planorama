@@ -30,6 +30,7 @@
 3. Make sure local MongoDB instance is running
     ```
     brew services start mongodb-community
+    brew install mongosh
     mongosh
     use scheduler 
     ```
