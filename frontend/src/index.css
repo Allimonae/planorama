@@ -7,8 +7,7 @@ body {
 }
 
 input,
-textarea,
-select {
+textarea {
     @apply border-1 border-gray-400 shadow-sm bg-white rounded w-full;
 }
 

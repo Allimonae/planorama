@@ -1,145 +1,133 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-// import hunterCampus from '../assets/hunter-campus-2001415976.jpg'
+
+type DropdownOption = {
+    label: string;
+    value: string;
+};
+
+interface DropdownProps {
+    className: string;
+    id: string;
+    value: string;
+    label: string;
+    options: DropdownOption[];
+    onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+}
+
+const Dropdown = (props: DropdownProps) => {
+    const { className, id, label, options, value, onChange } = props;
+    return(
+        <div>
+            <label htmlFor={id}>{label}</label>
+            <select 
+                className={className} 
+                id={id} 
+                name={id} 
+                value={value} 
+                onChange={onChange}
+                required
+            >
+                <option value="" disabled>Choose an option</option>
+                {options.map((option, index) => (
+                    <option key={index} value={option.value}>
+                        {option.label}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
+};
 
 const BookingForm = () => {
     const location = useLocation();
     const date = location.state?.date;
-
     const navigate = useNavigate();
 
-    const rooms = ['Room 1', 'Room 2', 'Room 3']; // should only list rooms that are available
-    
-    const [bookingData, setBookingData] = useState({
-        room: '',
-        date: date,
-        start: '',
-        end: '',
-        clubName: '',
-        eventTitle: '',
-        eventDescription: '',
-        numGuests: '',
-        dateCreated: ''
+    const [eventData, setEventData] = useState(() => {
+        const parsedDate = date ? new Date(date) : new Date(); // default to current if undefined
+        const endDate = new Date(parsedDate.getTime() + 60 * 60 * 1000);
+        
+        return {
+            date: parsedDate,
+            allDay: false,
+            start: parsedDate,
+            end: endDate,
+            title: '',
+            backgroundColor: ''
+        };
     });
 
     // Times array given start and end time
-    const times = (start:string, end:string) => {
-        const res = [];
-        const mins = ['00', '30'];
-
-        let [startHour, startMin] = start.split(':').map(num => parseInt(num));
-        const [endHour, endMin] = end.split(':').map(num => parseInt(num));
-
-        let i = 0;
-        while (startHour < endHour) {
-            // let meridiem;
-            // let hour = startHour;
-            // if (hour < 12) {
-            //     meridiem = 'AM';
-            //     hour = hour === 0 ? 12 : hour;
-            // } else {
-            //     meridiem = 'PM';
-            //     hour -= 12;
-            // }
-
-            res.push(startHour + ':' + mins[i])
-            i ++;
-            if (i % 2 === 0){
-                i = 0;
-                startHour ++;
+    const getTimes = (baseDate = eventData.date) => {
+        const times = [];
+        for (let h = 0; h < 24; h++) {
+            for (let m = 0; m < 60; m += 15) {
+                const hour12 = h % 12 || 12;
+                const minute = m.toString().padStart(2, '0');
+                const period = h < 12 ? 'AM' : 'PM';
+                const label = `${hour12}:${minute} ${period}`;
+    
+                const date = new Date(baseDate);
+                date.setHours(h, m, 0, 0); // set to current iteration time
+    
+                times.push({ label, value: date.toISOString() }); // store ISO string or raw date if you prefer
             }
-        } 
-
-        return res;
-    }
-
-    const Duration = (start:string, end:string) => {
-        let res;
-        if (start && end) {
-            const [startHour, startMin] = start.split(':').map(num => parseInt(num));
-            const [endHour, endMin] = end.split(':').map(num => parseInt(num));
-
-            if (endHour < startHour || 
-                (endHour == startHour && endMin <= startMin)) 
-            {
-                res = "Invalid times.";
-            } else {
-                let hour = endHour - startHour;
-                let min = endMin - startMin;
-                if (endMin < startMin) {
-                    min += 60;
-                    hour -= 1;
-                }
-                if (hour && min) {
-                    res = `${hour} hr ${min} min`;
-                } else {
-                    if (min) {
-                        res = `${min} min`;
-                    } else if (hour) {
-                        res = `${hour} hr`;
-                    }
-                }
-            }
-        } else {
-            res = 'Please select start and end time.'
         }
-        return res
-    }
-
-    // Dropdown with array Dropdown
-    interface DropdownProps {
-        id: string;
-        value: string;
-        label: string;
-        options: string[];
+        return times;
+    };
+    
+    function calculateDuration(startDate: Date, endDate: Date): string {
+        if (startDate >= endDate) return '';
+    
+        const durationMs = endDate.getTime() - startDate.getTime();
+        const durationMinutes = Math.floor(durationMs / 60000); // ms to minutes
+    
+        const days = Math.floor(durationMinutes / (60 * 24));
+        const hours = Math.floor((durationMinutes % (60 * 24)) / 60);
+        const minutes = durationMinutes % 60;
+    
+        const parts = [];
+        if (days > 0) parts.push(`${days} day(s)`);
+        if (hours > 0) parts.push(`${hours} hour(s)`);
+        if (minutes > 0) parts.push(`${minutes} minute(s)`);
+    
+        return parts.join(' and ');
     }
     
-    const Dropdown = (props: DropdownProps) => {
-        const { id, label, options, value } = props;
-        return(
-            <div>
-                <label htmlFor={id}>{label}</label>
-                <select 
-                    className='h-[35px]' 
-                    id={id} 
-                    name={id} 
-                    value={value} 
-                    onChange={handleChange}
-                    required
-                >
-                    <option value="" disabled>Choose an option</option>
-                    {options.map((option, index) => (
-                        <option key={index} value={option}>
-                            {option}
-                        </option>
-                    ))}
-                </select>
-            </div>
-        );
-    };
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
         const { name, value } = e.target;
-        setBookingData((prevData) => ({
+        setEventData((prevData) => ({
             ...prevData,
             [name]: value
         }));
     };
 
+    const handleDateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const { id, value } = e.target;
+        const parsedDate = new Date(value);
+      
+        setEventData((prev) => ({
+          ...prev,
+          [id]: parsedDate,
+        }));
+    };
+      
     useEffect(() => {
-        console.log('updating...', bookingData);
-    }, [bookingData]);
+        console.log('updating...', eventData);
+    }, [eventData]);
 
     // Handle Submit
     const handleSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setBookingData((prevData) => ({
+        setEventData((prevData) => ({
             ...prevData,
             dateCreated: new Date().toISOString()
         }));
-        console.log('Form submitted', bookingData)
+        console.log('Form submitted', eventData)
     }
 
     return (
@@ -156,7 +144,7 @@ const BookingForm = () => {
                 <h1 className='booking-form-element text-center text-4xl font-bold'>Reserve a room</h1>
                 <form 
                     className='flex flex-col' 
-                    id='booking-form'
+                    id='event-form'
                     onSubmit={handleSubmit}
                 >
                     <div className='flex flex-col-2'>
@@ -172,17 +160,6 @@ const BookingForm = () => {
                                 onChange={handleChange}>
                             </input>
                         </div>
-
-                        {/* Room - Dropdown */}
-                        <div className='booking-form-element text-lg flex-1'>
-                            <Dropdown 
-                                id='room'
-                                value={bookingData.room}
-                                label='Select a room' 
-                                options={rooms}
-                            />
-                        </div>
-                        
                     </div>
                     
                     {/* Time - dropdown, start time cannot be after end time, show duration */}
@@ -190,38 +167,41 @@ const BookingForm = () => {
                         {/* Start time */}
                         <div className='booking-form-element text-lg flex-1'>
                             <Dropdown 
+                                className={
+                                    calculateDuration(eventData.start, eventData.end) === ''
+                                        ? 'border border-red-500 h-[35px] shadow-sm bg-white rounded w-full' 
+                                        : 'h-[35px] border-1 border-gray-400 shadow-sm bg-white rounded w-full'
+                                }
                                 id='start'
-                                value={bookingData.start}
+                                value={eventData.start.toISOString()}
                                 label='Start Time' 
-                                options={times('0:00', '24:00')}
+                                options={getTimes().map(time => ({
+                                    label: time.label,
+                                    value: time.value
+                                }))}
+                                onChange={handleDateChange}
                             />
                         </div>
                         
                         {/* End time */}
                         <div className='booking-form-element text-lg flex-1'>
                             <Dropdown 
+                                className={
+                                    calculateDuration(eventData.start, eventData.end) === ''
+                                        ? 'border border-red-500 h-[35px] shadow-sm bg-white rounded w-full outline-none' 
+                                        : 'h-[35px] border-1 border-gray-400 shadow-sm bg-white rounded w-full'
+                                }
                                 id='end'
-                                value={bookingData.end}
+                                value={eventData.end.toISOString()}
                                 label='End Time' 
-                                options={times('0:00', '24:00')}
+                                options={getTimes().map(time => ({
+                                    label: time.label,
+                                    value: time.value
+                                }))}
+                                onChange={handleDateChange}
                             />
-                            <p>{Duration(bookingData.start, bookingData.end)}</p>
+                            <p>{calculateDuration(eventData.start, eventData.end) ? calculateDuration(eventData.start, eventData.end): "Start time is after end time."}</p>
                         </div>
-
-                    </div>
-
-                    {/* Club name - text */}
-                    <div className='booking-form-element text-lg'>
-                        <label htmlFor='clubName'>Club Name</label>
-                        <input 
-                            className='h-[35px] px-2' 
-                            id='clubName' 
-                            name='clubName'
-                            type='text'
-                            value={bookingData.clubName}
-                            onChange={handleChange}
-                            required
-                        />
                     </div>
 
                     {/* Event Title - text */}
@@ -232,55 +212,19 @@ const BookingForm = () => {
                             id='eventTitle' 
                             name='eventTitle'
                             type='text'
-                            value={bookingData.eventTitle}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    {/* Event Description - text area */}
-                    <div className='booking-form-element text-lg'>
-                        <label htmlFor='eventDescription'>Event Description</label>
-                        <textarea
-                            className='h-[200px] px-2' 
-                            id='eventDescription' 
-                            name='eventDescription'
-                            value={bookingData.eventDescription}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    {/* Expected Number of Guests - number */}
-                    <div className='booking-form-element text-lg'>
-                        <label htmlFor='numGuests'>Expected number of guests</label>
-                        <input 
-                            className='h-[35px] px-2' 
-                            id='numGuests' 
-                            name='numGuests'
-                            type='number'
-                            min='0'
-                            value={bookingData.numGuests}
+                            value={eventData.title}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
                     {/* Confirming form handling, comment out later */}
-                    {/* <div className="booking-form-element">
+                    <div className="booking-form-element">
                         <h1>Testing, comment out later</h1>
-                        <p>Room: {bookingData.room}</p>
-                        <p>Date: {bookingData.date}</p>
-                        <p>Start: {bookingData.start}</p>
-                        <p>End: {bookingData.end}</p>
-                        <p>Club Name: {bookingData.clubName}</p>
-                        <p>Event Title: {bookingData.eventTitle}</p>
-                        <p>Event Description: {bookingData.eventDescription}</p>
-                        <p>Num Guests: {bookingData.numGuests}</p>
-                        <p>Date Created: {bookingData.dateCreated}</p>
-                    </div> */}
-
-                    {/* Tags - optional */}
+                        <p>Date: {eventData.date.toLocaleString()}</p>
+                        <p>Start: {eventData.start.toLocaleString()}</p>
+                        <p>End: {eventData.end.toLocaleString()}</p>
+                    </div>
 
                     {/* button - submit will tell you if booking was successful, and if not why (missing a field, time slot filled) */}
                     <button type='submit'>Submit</button>
