@@ -44,17 +44,45 @@ const BookingForm = () => {
     const date = location.state?.date;
     const navigate = useNavigate();
 
-    const [eventData, setEventData] = useState(() => {
+    const getTimeOnly = (date: Date) => {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const seconds = date.getSeconds().toString().padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
+    };
+
+    interface EventData {
+        date: Date;
+        allDay: boolean;
+        start: Date;
+        end: Date;
+        title: string;
+        daysOfWeek: number[]; 
+        startTime: string;
+        endTime: string;
+        startRecur: Date;
+        endRecur: Date;
+        groupId: string;
+    }
+    
+    const [eventData, setEventData] = useState<EventData>(() => {
         const parsedDate = date ? new Date(date) : new Date(); // default to current if undefined
         const endDate = new Date(parsedDate.getTime() + 60 * 60 * 1000);
+        const endRecurDate = new Date(parsedDate.getMonth() + 1);
         
         return {
             date: parsedDate,
-            allDay: false,
+            allDay: true,
             start: parsedDate,
             end: endDate,
             title: '',
-            backgroundColor: ''
+            daysOfWeek: [],
+            startTime: '',
+            endTime: '',
+            startRecur: parsedDate,
+            endRecur: endRecurDate,
+            groupId: ''
+            // backgroundColor: ''
         };
     });
 
@@ -94,8 +122,23 @@ const BookingForm = () => {
     
         return parts.join(' and ');
     }
-    
 
+    const toggleAllDay = () => {
+        setEventData(prev => ({
+            ...prev,
+            allDay: !prev.allDay
+        }));
+    };
+
+    const toggleStartTime = () => {
+        setEventData(prev => ({
+            ...prev,
+            daysOfWeek: [],
+            startTime: prev.startTime ? '' : getTimeOnly(prev.start).toLocaleString(),
+            endTime: prev.endTime ? '' : getTimeOnly(prev.end).toLocaleString()
+        }));
+    };
+    
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
@@ -115,119 +158,189 @@ const BookingForm = () => {
           [id]: parsedDate,
         }));
     };
+
+    const handleDaysOfWeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = parseInt(e.target.value);
+        const isChecked = e.target.checked;
+      
+        setEventData(prev => {
+            const updatedDays = isChecked
+                ? [...prev.daysOfWeek, value]
+                : prev.daysOfWeek.filter(day => day !== value);
+        
+            return {
+                ...prev,
+                daysOfWeek: updatedDays.sort((a, b) => a - b)
+            };
+        });
+    };
       
     useEffect(() => {
         console.log('updating...', eventData);
     }, [eventData]);
 
     // Handle Submit
-    const handleSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setEventData((prevData) => ({
-            ...prevData,
-            dateCreated: new Date().toISOString()
-        }));
-        console.log('Form submitted', eventData)
-    }
+      
+        const newEvent = {
+          ...eventData,
+          id: Date.now().toString(), // Or any unique ID logic
+        };
+      
+        // Optional: Add to global events list or save to backend here
+        // e.g., addEvent(newEvent);
+      
+        // Redirect to home page
+        navigate('/');
+    };
 
     return (
         <div>
-            <div className="w-full">
-                <button 
-                    className='m-3'
-                    onClick={() => navigate(-1)}
-                >Back</button>
-            </div>
-            
             <div className='bg-amber-50 w-4/5 mx-auto flex flex-col py-[50px] rounded-3xl shadow-2xl'>
                 {/* HEADER */}
-                <h1 className='booking-form-element text-center text-4xl font-bold'>Reserve a room</h1>
+                <h1 className='booking-form-element text-center text-4xl font-bold'>Calendar event</h1>
                 <form 
                     className='flex flex-col' 
                     id='event-form'
                     onSubmit={handleSubmit}
                 >
-                    <div className='flex flex-col-2'>
+                    <div className=''>
                         {/* Date - how should date be handled? */}
                         <div className='booking-form-element text-lg flex-1'>
-                            <label htmlFor='date'>Date</label>
-                            <input 
-                                className='h-[35px] px-2'
-                                id='date'
-                                name='date'
-                                type='text'
-                                value={date}
-                                onChange={handleChange}>
-                            </input>
-                        </div>
-                    </div>
-                    
-                    {/* Time - dropdown, start time cannot be after end time, show duration */}
-                    <div className='flex flex-col-2'> 
-                        {/* Start time */}
-                        <div className='booking-form-element text-lg flex-1'>
-                            <Dropdown 
-                                className={
-                                    calculateDuration(eventData.start, eventData.end) === ''
-                                        ? 'border border-red-500 h-[35px] shadow-sm bg-white rounded w-full' 
-                                        : 'h-[35px] border-1 border-gray-400 shadow-sm bg-white rounded w-full'
-                                }
-                                id='start'
-                                value={eventData.start.toISOString()}
-                                label='Start Time' 
-                                options={getTimes().map(time => ({
-                                    label: time.label,
-                                    value: time.value
-                                }))}
-                                onChange={handleDateChange}
-                            />
-                        </div>
-                        
-                        {/* End time */}
-                        <div className='booking-form-element text-lg flex-1'>
-                            <Dropdown 
-                                className={
-                                    calculateDuration(eventData.start, eventData.end) === ''
-                                        ? 'border border-red-500 h-[35px] shadow-sm bg-white rounded w-full outline-none' 
-                                        : 'h-[35px] border-1 border-gray-400 shadow-sm bg-white rounded w-full'
-                                }
-                                id='end'
-                                value={eventData.end.toISOString()}
-                                label='End Time' 
-                                options={getTimes().map(time => ({
-                                    label: time.label,
-                                    value: time.value
-                                }))}
-                                onChange={handleDateChange}
-                            />
-                            <p>{calculateDuration(eventData.start, eventData.end) ? calculateDuration(eventData.start, eventData.end): "Start time is after end time."}</p>
+                            <p>Date: {eventData.date.getFullYear().toString() + '-' + (eventData.date.getMonth() + 1) + '-' + eventData.date.getDate()}</p>
                         </div>
                     </div>
 
                     {/* Event Title - text */}
                     <div className='booking-form-element text-lg'>
-                        <label htmlFor='eventTitle'>Event Title</label>
+                        <label htmlFor='title'>Title</label>
                         <input 
-                            className='h-[35px] px-2' 
-                            id='eventTitle' 
-                            name='eventTitle'
+                            className='h-[35px] px-2 w-full' 
+                            id='title' 
+                            name='title'
                             type='text'
                             value={eventData.title}
                             onChange={handleChange}
                             required
                         />
                     </div>
+                    
+                    {/* Time - dropdown, start time cannot be after end time, show duration */}
+                    <div className='flex flex-col-2'> 
+                        <div className='flex items-center'>
+                            {/* toggle button for all day */}
+                            <button
+                                type="button"
+                                onClick={toggleAllDay}
+                                className={`booking-form-element px-4 py-2 rounded h-[40px] w-[200px] font-semibold transition-colors duration-200 ${
+                                    eventData.allDay ? 'bg-gray-300 text-gray-800' : 'bg-green-500 text-white'
+                                }`}
+                            >
+                                {eventData.allDay ? 'All Day' : 'Certain Times'}
+                            </button>
+                        </div>
 
-                    {/* Confirming form handling, comment out later */}
-                    <div className="booking-form-element">
-                        <h1>Testing, comment out later</h1>
-                        <p>Date: {eventData.date.toLocaleString()}</p>
-                        <p>Start: {eventData.start.toLocaleString()}</p>
-                        <p>End: {eventData.end.toLocaleString()}</p>
+                        {eventData.allDay ? (<></>):
+                        (<div className='flex flex-col-2'>
+                            {/* Start time */}
+                            <div className='booking-form-element flex-1 text-lg'>
+                                <Dropdown 
+                                    className={
+                                        calculateDuration(eventData.start, eventData.end) === ''
+                                            ? 'border border-red-500 h-[35px] shadow-sm bg-white rounded w-full' 
+                                            : 'h-[35px] border-1 border-gray-400 shadow-sm bg-white rounded w-full'
+                                    }
+                                    id='start'
+                                    value={eventData.start.toISOString()}
+                                    label='Start Time' 
+                                    options={getTimes().map(time => ({
+                                        label: time.label,
+                                        value: time.value
+                                    }))}
+                                    onChange={handleDateChange}
+                                />
+                            </div>
+                            
+                            {/* End time */}
+                            <div className='booking-form-element text-lg flex-1'>
+                                <Dropdown 
+                                    className={
+                                        calculateDuration(eventData.start, eventData.end) === ''
+                                            ? 'border border-red-500 h-[35px] shadow-sm bg-white rounded w-full outline-none' 
+                                            : 'h-[35px] border-1 border-gray-400 shadow-sm bg-white rounded w-full'
+                                    }
+                                    id='end'
+                                    value={eventData.end.toISOString()}
+                                    label='End Time' 
+                                    options={getTimes().map(time => ({
+                                        label: time.label,
+                                        value: time.value
+                                    }))}
+                                    onChange={handleDateChange}
+                                />
+                                <p>{calculateDuration(eventData.start, eventData.end) ? calculateDuration(eventData.start, eventData.end): "Start time is after end time."}</p>
+                            </div>
+                        </div>)}
                     </div>
 
+                    {/* Reoccuring event */}
+                    <div className='flex flex-col-3'> 
+                        <div className='flex-1 items-center'>
+                            {/* toggle button for recurring */}
+                            <button
+                                type="button"
+                                onClick={toggleStartTime}
+                                className={`booking-form-element px-4 py-2 rounded h-[40px] w-[200px] font-semibold transition-colors duration-200 ${
+                                    eventData.startTime ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800'
+                                }`}
+                            >
+                                {eventData.startTime ? 'Recurring' : 'Only occur once'}
+                            </button>
+                        </div>
+
+                        {eventData.startTime ? (
+                        <div className='flex-2'>
+                            {/* Start time */}
+                            <div className='booking-form-element flex-1 text-lg'>
+                               
+                            </div>
+                            
+                            {/* select days of week */}
+                            <div className='booking-form-element text-lg flex-1'>
+                                <h1>Days of recurrence: </h1>
+                                <label><input type="checkbox" name="daysOfWeek" value="0" onChange={handleDaysOfWeekChange} /> Sunday</label><br/>
+                                <label><input type="checkbox" name="daysOfWeek" value="1" onChange={handleDaysOfWeekChange} /> Monday</label><br/>
+                                <label><input type="checkbox" name="daysOfWeek" value="2" onChange={handleDaysOfWeekChange} /> Tuesday</label><br/>
+                                <label><input type="checkbox" name="daysOfWeek" value="3" onChange={handleDaysOfWeekChange} /> Wednesday</label><br/>
+                                <label><input type="checkbox" name="daysOfWeek" value="4" onChange={handleDaysOfWeekChange} /> Thursday</label><br/>
+                                <label><input type="checkbox" name="daysOfWeek" value="5" onChange={handleDaysOfWeekChange} /> Friday</label><br/>
+                                <label><input type="checkbox" name="daysOfWeek" value="6" onChange={handleDaysOfWeekChange} /> Saturday</label><br/>
+                            </div>
+                        </div>
+                        ):(<></>)}
+                    </div>
+
+                    {/* Confirming form handling, comment out later */}
+                    {/* <div className="booking-form-element">
+                        <h1>Testing, comment out later</h1>
+                        <p>Date: {eventData.date.toLocaleString()}</p>
+                        <p>All day: {eventData.allDay ? 'true' : 'false'}</p>
+                        <p>Start: {eventData.start.toLocaleString()}</p>
+                        <p>End: {eventData.end.toLocaleString()}</p>
+                        <p>Recurring start: {eventData.startTime ? eventData.startTime : 'false'}</p>
+                        <p>Recurring end: {eventData.endTime ? eventData.endTime : 'false'}</p>
+                        <p>Recurring days of week: {eventData.daysOfWeek}</p>
+                    </div> */}
+
                     {/* button - submit will tell you if booking was successful, and if not why (missing a field, time slot filled) */}
-                    <button type='submit'>Submit</button>
+                    <div className='flex'>
+                        <button 
+                            className='m-3 form-button'
+                            onClick={() => navigate(-1)}
+                        >Back</button>
+                        <button className="form-button" type='submit'>Submit</button>
+                    </div>
                 </form>
             </div>
         </div>
