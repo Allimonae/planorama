@@ -132,15 +132,60 @@ const BookingForm = () => {
         console.log('updating...', bookingData);
     }, [bookingData]);
 
-    // Handle Submit
-    const handleSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
+    // Handle Submit (UPDATED)
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setBookingData((prevData) => ({
-            ...prevData,
-            dateCreated: new Date().toISOString()
-        }));
-        console.log('Form submitted', bookingData)
-    }
+    
+        const dataToSubmit = {
+            clubName: bookingData.clubName,
+            roomNumber: bookingData.room,
+            date: bookingData.date,
+            startTime: bookingData.start,
+            endTime: bookingData.end,
+            eventTitle: bookingData.eventTitle,
+            purpose: bookingData.eventDescription,
+            numGuests: bookingData.numGuests
+          };
+          
+          
+    
+        try {
+            const res = await fetch('http://localhost:5000/api/bookings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dataToSubmit)
+            });
+    
+            if (res.ok) {
+                alert('Reservation submitted successfully!');
+                console.log('Success:', await res.json());
+    
+                // Resetting the form
+                setBookingData({
+                    room: '',
+                    date: date,
+                    start: '',
+                    end: '',
+                    clubName: '',
+                    eventTitle: '',
+                    eventDescription: '',
+                    numGuests: '',
+                    dateCreated: ''
+                });
+    
+                navigate('/');
+
+            } else {
+                const err = await res.json();
+                alert('Error: ' + err.message);
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            alert('Something went wrong. Please try again.');
+        }
+    };      
 
     return (
         <div>

@@ -17,10 +17,10 @@ app.use(cors());
 app.use(json());
 
 // MongoDB connection
-connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/scheduler', {
+connect('mongodb://127.0.0.1:27017/scheduler', {
   useNewUrlParser: true,
   useUnifiedTopology: true
-});
+})
 
 const db = connection;
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -35,7 +35,9 @@ const bookingSchema = new Schema({
   date: { type: Date, required: true },
   startTime: { type: String, required: true },
   endTime: { type: String, required: true },
-  purpose: { type: String, required: true }
+  eventTitle: { type: String, required: true },
+  purpose: { type: String, required: true },
+  numGuests: { type: Number }
 });
 
 const Booking = model('Booking', bookingSchema);
@@ -56,9 +58,9 @@ app.get("/api/bookings", async (req, res) => {
 
 app.post('/api/bookings', async (req, res) => {
   try {
-    const { clubName, roomNumber, date, startTime, endTime, purpose } = req.body;
-    
-    // Check for existing bookings
+    const { clubName, roomNumber, date, startTime, endTime, eventTitle, purpose, numGuests } = req.body;
+
+    // This checks for time conflicts!
     const existingBooking = await Booking.findOne({
       roomNumber,
       date,
@@ -84,7 +86,9 @@ app.post('/api/bookings', async (req, res) => {
       date,
       startTime,
       endTime,
-      purpose
+      eventTitle,
+      purpose,
+      numGuests
     });
 
     const newBooking = await booking.save();

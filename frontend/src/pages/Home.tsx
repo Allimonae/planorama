@@ -1,50 +1,67 @@
-// import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import FullCalendar from '@fullcalendar/react'
-import interactionPlugin from '@fullcalendar/interaction'
-import dayGridPlugin from '@fullcalendar/daygrid'
-// import timeGridPlugin from '@fullcalendar/timegrid'
+import FullCalendar from '@fullcalendar/react';
+import interactionPlugin from '@fullcalendar/interaction';
+import dayGridPlugin from '@fullcalendar/daygrid';
+
+interface Booking {
+  _id: string;
+  clubName: string;
+  roomNumber: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  eventTitle: string;
+  purpose: string;
+}
 
 const Home = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [events, setEvents] = useState<any[]>([]);
 
-    const handleDateClick = (arg: any) => {
-        // alert(arg.dateStr);
-        const date = arg.dateStr;
-        navigate('/bookingform', {state: { date }});
-    }
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/bookings');
+        const data: Booking[] = await res.json();
 
-    const eventInfo = {
-        room: "Thomas Hunter Game Room",
-        date: new Date(),
-        start: '',
-        end: '',
-        clubName: '',
-        eventTitle: '',
-        eventDescription: '',
-        numGuests: '',
-        dateCreated: ''
-    }
-    // const renderEventContent = () => {
-    //     return(
-    //         <b>{eventInfo.title}</b>
-    //     )
-    // }
+        // Transform bookings into FullCalendar format
+        const calendarEvents = data.map(booking => ({
+          id: booking._id,
+          title: booking.eventTitle,
+          start: `${booking.date.slice(0, 10)}T${booking.startTime}`,
+          end: `${booking.date.slice(0, 10)}T${booking.endTime}`,
+          extendedProps: {
+            clubName: booking.clubName,
+            purpose: booking.purpose,
+            roomNumber: booking.roomNumber
+          }
+        }));
 
-    return (
-        <div>
-            <FullCalendar
-                plugins={[ dayGridPlugin, interactionPlugin ]}
-                initialView='dayGridMonth'
-                dateClick={handleDateClick}
-                // eventContent={renderEventContent}
-                events={[
-                    { title: 'Computer Science Networking event', date: '2025-04-01'},
-                    { title: 'Chinese club event', date: '2025-04-02'}
-                ]}
-            />
-        </div>
-    );
+        setEvents(calendarEvents);
+      } catch (error) {
+        console.error('Failed to fetch bookings:', error);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
+  const handleDateClick = (arg: any) => {
+    const date = arg.dateStr;
+    navigate('/bookingform', { state: { date } });
+  };
+
+  return (
+    <div>
+      <FullCalendar
+        plugins={[dayGridPlugin, interactionPlugin]}
+        initialView='dayGridMonth'
+        dateClick={handleDateClick}
+        events={events}
+      />
+    </div>
+  );
 };
 
 export default Home;
