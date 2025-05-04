@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
-import Home from "./pages/Home";
+import Home from "./pages/Calendar";
 import BookingForm from "./pages/BookingForm";
 
 function App() {
