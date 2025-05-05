@@ -1,0 +1,28 @@
+[
+    {
+      "id": "dummy1",
+      "title": "Data Science Class",
+      "allDay": false,
+      "date": "2025-05-01",
+      "start": "2025-05-01T10:30:00",
+      "end": "2025-05-01T11:45:00",
+      "startTime": "10:30:00",
+      "endTime": "11:45:00",
+      "startRecur": "2025-05-01",
+      "endRecur": null,
+      "daysOfWeek": [],
+      "groupId": "cs-event",
+      "backgroundColor": "pink"
+    },
+    {
+      "id": "dummy2",
+      "title": "Spanish club event",
+      "allDay": true,
+      "date": "2025-05-02",
+      "start": "2025-05-02T00:00:00",
+      "end": "2025-05-02T23:59:59",
+      "daysOfWeek": [],
+      "groupId": "club-event"
+    }
+  ]
+  

@@ -82,7 +82,6 @@ const BookingForm = () => {
             startRecur: parsedDate,
             endRecur: endRecurDate,
             groupId: ''
-            // backgroundColor: ''
         };
     });
 
@@ -191,11 +190,10 @@ const BookingForm = () => {
         try {
           const res = await fetch('http://localhost:5000/api/bookings', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(newEvent)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData)
           });
+          
       
           if (res.ok) {
             alert('Event submitted successfully!');
