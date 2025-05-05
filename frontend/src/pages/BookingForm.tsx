@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { addEvent } from '../lib/supabase'
 
 type DropdownOption = {
     label: string;
@@ -175,21 +176,26 @@ const BookingForm = () => {
         });
     };
       
-    useEffect(() => {
-        console.log('updating...', eventData);
-    }, [eventData]);
+    // useEffect(() => {
+    //     console.log('updating...', eventData);
+    // }, [eventData]);
 
     // Handle Submit (UPDATED)
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        const timestamp = new Date(Date.now()).toISOString();
       
         const newEvent = {
-          ...eventData,
-          id: Date.now().toString(), // Or any unique ID logic
+            id: timestamp, // Or any unique ID logic
+            title: eventData.title,
+            date: eventData.date.toISOString(),
+            allDay: eventData.allDay,
+            start: eventData.start.toISOString(),
+            end: eventData.end.toISOString()
         };
       
-        // Optional: Add to global events list or save to backend here
-        // e.g., addEvent(newEvent);
+        await addEvent(newEvent)
       
         // Redirect to home page
         navigate('/');
@@ -322,7 +328,7 @@ const BookingForm = () => {
                     </div>
 
                     {/* Confirming form handling, comment out later */}
-                    {/* <div className="booking-form-element">
+                    <div className="booking-form-element">
                         <h1>Testing, comment out later</h1>
                         <p>Date: {eventData.date.toLocaleString()}</p>
                         <p>All day: {eventData.allDay ? 'true' : 'false'}</p>
@@ -331,7 +337,7 @@ const BookingForm = () => {
                         <p>Recurring start: {eventData.startTime ? eventData.startTime : 'false'}</p>
                         <p>Recurring end: {eventData.endTime ? eventData.endTime : 'false'}</p>
                         <p>Recurring days of week: {eventData.daysOfWeek}</p>
-                    </div> */}
+                    </div>
 
                     {/* button - submit will tell you if booking was successful, and if not why (missing a field, time slot filled) */}
                     <div className='flex'>

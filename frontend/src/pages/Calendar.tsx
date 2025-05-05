@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react'
 import interactionPlugin from '@fullcalendar/interaction'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
+import { getEvents } from '../lib/supabase'
 
 const Home = () => {
     const navigate = useNavigate();
@@ -16,27 +17,42 @@ const Home = () => {
 
     const calendarRef = useRef(null)
 
-    const events = [
-        { 
-            id: 'a',
-            groupId: 'b',
-            allDay: false, 
-            start: '2025-05-01T10:30',
-            end: '2025-05-01T11:45',
-            startTime: '07:00:00',
-            endTime: '',
-            startRecur: '2025-05-01',
-            title: 'Computer Science Networking event', 
-            date: '2025-05-01',
-            editable: true,
-            backgroundColor: 'pink'
-        },
+    const events2 = [
+        // { 
+        //     id: 'a',
+        //     groupId: 'b',
+        //     allDay: false, 
+        //     startTime: '2025-05-01T10:30',
+        //     endTime: '2025-05-01T11:45',
+        //     startRecurTime: '07:00:00',
+        //     endRecurTime: '',
+        //     startRecur: '2025-05-01',
+        //     title: 'Computer Science Networking event', 
+        //     date: '2025-05-01',
+        //     editable: true,
+        //     backgroundColor: 'pink'
+        // },
         { title: 'Chinese club event', date: '2025-05-02'}
     ]
 
+    const [events, setEvents] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchedEvents = async () => {
+            const fetchedEvents = await getEvents();
+            console.log('Fetched events:', fetchedEvents);
+            if (fetchedEvents) {
+                setEvents(fetchedEvents)
+            } else {
+                console.error('No events fetched or an error occured')
+            }
+        }
+
+        fetchedEvents();
+    }, []);
+
     return (
         <div>
-            {/* <button onClick={goNext}>Go Next</button> */}
             <FullCalendar
                 ref={calendarRef}
                 plugins={[ dayGridPlugin, interactionPlugin, timeGridPlugin ]}
