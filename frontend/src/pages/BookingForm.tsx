@@ -179,21 +179,37 @@ const BookingForm = () => {
         console.log('updating...', eventData);
     }, [eventData]);
 
-    // Handle Submit (UPDATED)
+    // Handle Submit
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
       
         const newEvent = {
           ...eventData,
-          id: Date.now().toString(), // Or any unique ID logic
+          id: Date.now().toString(),
         };
       
-        // Optional: Add to global events list or save to backend here
-        // e.g., addEvent(newEvent);
+        try {
+          const res = await fetch('http://localhost:5000/api/bookings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newEvent)
+          });
       
-        // Redirect to home page
-        navigate('/');
-    };
+          if (res.ok) {
+            alert('Event submitted successfully!');
+            navigate('/'); // navigate back to main calendar
+          } else {
+            const err = await res.json();
+            alert('Error submitting: ' + err.message);
+          }
+        } catch (error) {
+          console.error('Submission failed:', error);
+          alert('Something went wrong submitting the form.');
+        }
+      };
+      
 
     return (
         <div>

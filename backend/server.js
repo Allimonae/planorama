@@ -30,15 +30,19 @@ db.once('open', () => {
 
 // Booking Schema
 const bookingSchema = new Schema({
-  clubName: { type: String, required: true },
-  roomNumber: { type: String, required: true },
+  title: { type: String, required: true },
   date: { type: Date, required: true },
-  startTime: { type: String, required: true },
-  endTime: { type: String, required: true },
-  eventTitle: { type: String, required: true },
-  purpose: { type: String, required: true },
-  numGuests: { type: Number }
+  allDay: { type: Boolean, required: true },
+  start: { type: Date, required: true },
+  end: { type: Date, required: true },
+  daysOfWeek: { type: [Number], default: [] },
+  startTime: { type: String, default: '' },
+  endTime: { type: String, default: '' },
+  startRecur: { type: Date, default: null },
+  endRecur: { type: Date, default: null },
+  groupId: { type: String, default: '' }
 });
+
 
 const Booking = model('Booking', bookingSchema);
 
@@ -58,45 +62,42 @@ app.get("/api/bookings", async (req, res) => {
 
 app.post('/api/bookings', async (req, res) => {
   try {
-    const { clubName, roomNumber, date, startTime, endTime, eventTitle, purpose, numGuests } = req.body;
-
-    // This checks for time conflicts!
-    const existingBooking = await Booking.findOne({
-      roomNumber,
+    const {
+      title,
       date,
-      $or: [
-        {
-          startTime: { $lte: startTime },
-          endTime: { $gt: startTime }
-        },
-        {
-          startTime: { $lt: endTime },
-          endTime: { $gte: endTime }
-        }
-      ]
-    });
-
-    if (existingBooking) {
-      return res.status(400).json({ message: 'Room is already booked for this time slot' });
-    }
-
-    const booking = new Booking({
-      clubName,
-      roomNumber,
-      date,
+      allDay,
+      start,
+      end,
+      daysOfWeek,
       startTime,
       endTime,
-      eventTitle,
-      purpose,
-      numGuests
+      startRecur,
+      endRecur,
+      groupId
+    } = req.body;
+
+    const booking = new Booking({
+      title,
+      date,
+      allDay,
+      start,
+      end,
+      daysOfWeek,
+      startTime,
+      endTime,
+      startRecur,
+      endRecur,
+      groupId
     });
 
-    const newBooking = await booking.save();
-    res.status(201).json(newBooking);
+    const savedBooking = await booking.save();
+    res.status(201).json(savedBooking);
   } catch (error) {
+    console.error('Error saving booking:', error);
     res.status(400).json({ message: error.message });
   }
 });
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
