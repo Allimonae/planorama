@@ -4,6 +4,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { useNavigate } from 'react-router-dom';
+import AssistantSidebar from './AssistantSidebar';
 
 const Calendar = () => {
     const navigate = useNavigate();
@@ -44,6 +45,7 @@ const Calendar = () => {
             }}
             timeZone="America/New_York"
           />
+          <AssistantSidebar />
         </div>
       );
     };
