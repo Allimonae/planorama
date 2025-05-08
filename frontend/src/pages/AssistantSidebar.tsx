@@ -4,6 +4,7 @@ const AssistantSidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([]);
   const [input, setInput] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,11 +18,14 @@ const AssistantSidebar = () => {
 
     try {
       // Call backend
+
+      setIsLoading(true);
       const res = await fetch('http://localhost:5000/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage }),
       });
+      setIsLoading(false);
 
       const data = await res.json();
 
@@ -65,6 +69,11 @@ const AssistantSidebar = () => {
               {msg.text}
             </div>
           ))}
+           {isLoading && (
+            <div className="text-sm p-2 rounded bg-green-100 text-left italic">
+              Typing...
+              </div>
+            )}
         </div>
 
         <form onSubmit={handleSubmit} className="flex pr-2">

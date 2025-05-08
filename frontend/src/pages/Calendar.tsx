@@ -53,7 +53,7 @@ const Calendar = () => {
               right: 'dayGridMonth,timeGridWeek,timeGridDay'
             }}
             timeZone="America/New_York"
-            nowIndicator="true"
+            nowIndicator
           />
           <AssistantSidebar />
         </div>

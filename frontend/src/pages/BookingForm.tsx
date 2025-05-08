@@ -178,13 +178,21 @@ const BookingForm = () => {
         console.log('updating...', eventData);
     }, [eventData]);
 
+
+    /*function convertNYToUTC(localDateTimeStr: string): Date {
+        const nyTime = new Date(localDateTimeStr + " GMT-0500");
+        return new Date(nyTime.toISOString());
+    }*/
+
     // Handle Submit
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        //const utcTime = convertNYToUTC(eventData.start.toLocaleString())
       
         const newEvent = {
           ...eventData,
           id: Date.now().toString(),
+          //date: utcTime
         };
       
         try {
