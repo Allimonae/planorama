@@ -96,9 +96,9 @@ const BookingForm = () => {
                 const label = `${hour12}:${minute} ${period}`;
     
                 const date = new Date(baseDate);
-                date.setHours(h, m, 0, 0); // set to current iteration time
+                date.setHours(h, m, 0, 0);
     
-                times.push({ label, value: date.toISOString() }); // store ISO string or raw date if you prefer
+                times.push({ label, value: date.toISOString() }); 
             }
         }
         return times;
@@ -108,7 +108,7 @@ const BookingForm = () => {
         if (startDate >= endDate) return '';
     
         const durationMs = endDate.getTime() - startDate.getTime();
-        const durationMinutes = Math.floor(durationMs / 60000); // ms to minutes
+        const durationMinutes = Math.floor(durationMs / 60000); 
     
         const days = Math.floor(durationMinutes / (60 * 24));
         const hours = Math.floor((durationMinutes % (60 * 24)) / 60);
@@ -188,16 +188,23 @@ const BookingForm = () => {
         };
       
         try {
-          const res = await fetch('http://localhost:5000/api/bookings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(eventData)
-          });
+            const cleanData = {
+                ...eventData,
+                start: eventData.start.toISOString(),
+                end: eventData.end.toISOString(),
+                date: eventData.date.toISOString(),
+              };
+              
+              const res = await fetch('http://localhost:5000/api/bookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cleanData)
+              });
           
       
           if (res.ok) {
             alert('Event submitted successfully!');
-            navigate('/'); // navigate back to main calendar
+            navigate('/', { state: { refreshCalendar: true } }); // navigate back to main calendar
           } else {
             const err = await res.json();
             alert('Error submitting: ' + err.message);
