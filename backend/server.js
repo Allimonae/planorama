@@ -5,6 +5,7 @@ import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import { OpenAI } from 'openai';
 import { getWeatherForecast } from './weather.js';
+import { DateTime } from 'luxon';
 
 dotenv.config();
 
@@ -19,8 +20,16 @@ const app = express();
 app.use(cors());
 app.use(json());
 
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/scheduler"; 
+
+app.listen(MONGODB_URI, () => {console.log(`MongoDB connected to ${MONGODB_URI}`)});
+
 // MongoDB connection
-connect('mongodb://127.0.0.1:27017/scheduler')
+connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
 
 const db = connection;
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -34,11 +43,13 @@ const bookingSchema = new Schema({
   start: Date,
   end: Date,
   daysOfWeek: [Number],
-  startTime: Date,
-  endTime: Date,
+  // startTime: Date,
+  // endTime: Date,
   startRecur: Date,
   endRecur: Date,
-  groupId: String
+  groupId: String,
+  backgroundColor: String,
+  borderColor: String
 });
 
 const Booking = model('Booking', bookingSchema);
@@ -52,7 +63,12 @@ app.get('/api/bookings', async (req, res) => {
       title: b.title,
       start: b.start?.toISOString(),
       end: b.end?.toISOString(),
-      allDay: b.allDay || false
+      // startTime: b.startTime,
+      // endTime: b.endTime,
+      // daysOfWeek: b.daysOfWeek,
+      allDay: b.allDay || false,
+      backgroundColor: b.backgroundColor,
+      borderColor: b.borderColor
     }));
     res.json(formattedDbBookings);
   } catch (err) {
@@ -61,28 +77,24 @@ app.get('/api/bookings', async (req, res) => {
   }
 });
 
-function convertUTCToNY(utcDateStr) {
-  const utcDate = new Date(utcDateStr);
-  return utcDate.toLocaleString('en-US', { timeZone: 'America/New_York' });
+function nyToUTC(dateStr) {
+  return DateTime.fromISO(dateStr, { zone: 'America/New_York' }).toUTC().toJSDate();
 }
 
 // POST route
 app.post('/api/bookings', async (req, res) => {
   try {
-    const { title, date, start, end } = req.body;
+    const { title, date, start, end, backgroundColor, borderColor, daysOfWeek } = req.body;
 
+    const utcStart = nyToUTC(start);
+    const utcEnd = nyToUTC(end);
     const bookingDate = new Date(date);
-    const startTime = new Date(start);
-    const endTime = new Date(end);
-
-    const newYorkStartTime = convertUTCToNY(startTime);
-    const newYorkEndTime = convertUTCToNY(endTime);
 
     const overlappingBooking = await Booking.findOne({
       $or: [
         {
-          start: { $lt: new Date(end) },
-          end: { $gt: new Date(start) }
+          start: { $lt: utcEnd },
+          end: { $gt: utcStart}
         }
       ]
     });
@@ -93,7 +105,14 @@ app.post('/api/bookings', async (req, res) => {
       });
     }
 
-    const booking = new Booking(req.body);
+    const booking = new Booking({
+      ...req.body,
+      start: utcStart,
+      end: utcEnd,
+      // startTime: startTime ? utcStart : '',
+      // endTime: endTime ? utcEnd : ''
+    });
+
     const saved = await booking.save();
     res.status(201).json(saved);
 
@@ -156,7 +175,10 @@ app.post('/api/ask', async (req, res) => {
           hour: '2-digit',
           minute: '2-digit',
           timeZone: 'America/New_York'
-        })
+        }),
+        daysOfWeek: e.daysOfWeek,
+        backgroundColor: e.backgroundColor,
+        borderColor: e.borderColor,
       };
     });
 

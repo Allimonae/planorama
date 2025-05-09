@@ -31,6 +31,8 @@ const Calendar = () => {
           date: shiftedDate,
           start: shiftedStart,
           end: shiftedEnd,
+          startTime: !event.allDay && event.recurring ? shiftedStart : '',
+          endTime: !event.allDay && event.recurring ? shiftedEnd : '',
         };
       });
 

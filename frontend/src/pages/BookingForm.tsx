@@ -20,6 +20,7 @@ const Dropdown = (props: DropdownProps) => {
     return(
         <div>
             <label htmlFor={id}>{label}</label>
+            <br/>
             <select 
                 className={className} 
                 id={id} 
@@ -44,12 +45,12 @@ const BookingForm = () => {
     const date = location.state?.date;
     const navigate = useNavigate();
 
-    const getTimeOnly = (date: Date) => {
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-        const seconds = date.getSeconds().toString().padStart(2, '0');
-        return `${hours}:${minutes}:${seconds}`;
-    };
+    // const getTimeOnly = (date: Date) => {
+    //     const hours = date.getHours().toString().padStart(2, '0');
+    //     const minutes = date.getMinutes().toString().padStart(2, '0');
+    //     const seconds = date.getSeconds().toString().padStart(2, '0');
+    //     return `${hours}:${minutes}:${seconds}`;
+    // };
 
     interface EventData {
         date: Date;
@@ -57,12 +58,15 @@ const BookingForm = () => {
         start: Date;
         end: Date;
         title: string;
-        daysOfWeek: number[]; 
+        daysOfWeek: string[]; 
         startTime: string;
         endTime: string;
         startRecur: Date;
         endRecur: Date;
         groupId: string;
+        backgroundColor: string;
+        borderColor: string;
+        recurring: Boolean;
     }
     
     const [eventData, setEventData] = useState<EventData>(() => {
@@ -81,7 +85,10 @@ const BookingForm = () => {
             endTime: '',
             startRecur: parsedDate,
             endRecur: endRecurDate,
-            groupId: ''
+            groupId: '',
+            backgroundColor: "Dodger Blue",
+            borderColor: "Dodger Blue",
+            recurring: false
         };
     });
 
@@ -125,7 +132,9 @@ const BookingForm = () => {
     const toggleAllDay = () => {
         setEventData(prev => ({
             ...prev,
-            allDay: !prev.allDay
+            allDay: !prev.allDay,
+            // startTime: !prev.allDay ? '': getTimeOnly(prev.start),
+            // endTime: !prev.allDay ? '': getTimeOnly(prev.end)
         }));
     };
 
@@ -133,8 +142,9 @@ const BookingForm = () => {
         setEventData(prev => ({
             ...prev,
             daysOfWeek: [],
-            startTime: prev.startTime ? '' : getTimeOnly(prev.start),
-            endTime: prev.endTime ? '' : getTimeOnly(prev.end)
+            recurring: !prev.recurring,
+            // startTime: prev.startTime || prev.allDay ? '' : getTimeOnly(prev.start),
+            // endTime: prev.endTime || prev.allDay? '' : getTimeOnly(prev.end)
         }));
     };
     
@@ -158,8 +168,18 @@ const BookingForm = () => {
         }));
     };
 
+    const handleColorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const { name, value } = e.target;
+
+        setEventData((prev) => ({
+            ...prev,
+            [name]: value,
+            borderColor: value
+        }))
+    }
+
     const handleDaysOfWeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = parseInt(e.target.value);
+        const value = e.target.value;
         const isChecked = e.target.checked;
       
         setEventData(prev => {
@@ -169,7 +189,7 @@ const BookingForm = () => {
         
             return {
                 ...prev,
-                daysOfWeek: updatedDays.sort((a, b) => a - b)
+                daysOfWeek: updatedDays.sort((a, b) => parseInt(a) - parseInt(b))
             };
         });
     };
@@ -181,19 +201,14 @@ const BookingForm = () => {
     // Handle Submit
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-      
-        const newEvent = {
-          ...eventData,
-          id: Date.now().toString(),
-          //date: utcTime
-        };
-      
+
         try {
             const cleanData = {
                 ...eventData,
                 start: eventData.start.toISOString(),
                 end: eventData.end.toISOString(),
                 date: eventData.date.toISOString(),
+                groupId: eventData.recurring ? new Date() : ''
               };
               
               const res = await fetch('http://localhost:5000/api/bookings', {
@@ -216,6 +231,18 @@ const BookingForm = () => {
         }
       };
       
+    const colorOptions: DropdownOption[] = [
+        { label: "🔵 Dodger Blue", value: "DodgerBlue" },
+        { label: "🔴 Tomato", value: "Tomato" },
+        { label: "🟢 Medium Sea Green", value: "MediumSeaGreen" },
+        { label: "🟡 Gold", value: "Gold" },
+        { label: "🟣 Orchid", value: "Orchid" },
+        { label: "🔵 Slate Blue", value: "SlateBlue" },
+        { label: "🟠 Coral", value: "Coral" },
+        { label: "🔵 Turquoise", value: "Turquoise" },
+        { label: "🟢 Lime Green", value: "LimeGreen" },
+        { label: "🟣 Deep Pink", value: "DeepPink" }
+    ];
 
     return (
         <div>
@@ -314,14 +341,14 @@ const BookingForm = () => {
                                 type="button"
                                 onClick={toggleStartTime}
                                 className={`booking-form-element px-4 py-2 rounded h-[40px] w-[200px] font-semibold transition-colors duration-200 ${
-                                    eventData.startTime ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800'
+                                    eventData.recurring ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800'
                                 }`}
                             >
-                                {eventData.startTime ? 'Recurring' : 'Only occur once'}
+                                {eventData.recurring ? 'Recurring' : 'Only occur once'}
                             </button>
                         </div>
 
-                        {eventData.startTime ? (
+                        {eventData.recurring ? (
                         <div className='flex-2'>
                             {/* Start time */}
                             <div className='booking-form-element flex-1 text-lg'>
@@ -342,6 +369,16 @@ const BookingForm = () => {
                         </div>
                         ):(<></>)}
                     </div>
+                    <div className='booking-form-element text-lg flex-1'>
+                        <Dropdown
+                            className='h-[35px] border-1 border-gray-400 shadow-sm bg-white rounded'
+                            id='backgroundColor'
+                            label='Color'
+                            value={eventData.backgroundColor}
+                            options={colorOptions}
+                            onChange={handleColorChange}
+                        />
+                    </div>
 
                     {/* Confirming form handling, comment out later */}
                     {/* <div className="booking-form-element">
@@ -350,9 +387,11 @@ const BookingForm = () => {
                         <p>All day: {eventData.allDay ? 'true' : 'false'}</p>
                         <p>Start: {eventData.start.toLocaleString()}</p>
                         <p>End: {eventData.end.toLocaleString()}</p>
+                        <p>Recurring: {eventData.recurring ? 'true': 'false'}</p>
                         <p>Recurring start: {eventData.startTime ? eventData.startTime : 'false'}</p>
                         <p>Recurring end: {eventData.endTime ? eventData.endTime : 'false'}</p>
                         <p>Recurring days of week: {eventData.daysOfWeek}</p>
+                        <p>Color: {eventData.backgroundColor}, {eventData.borderColor}</p>
                     </div> */}
 
                     {/* button - submit will tell you if booking was successful, and if not why (missing a field, time slot filled) */}
