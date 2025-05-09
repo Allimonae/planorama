@@ -53,7 +53,7 @@ const AssistantSidebar = ({ onEventScheduled }: { onEventScheduled?: () => void 
           setSuggestedEvent(null);
           onEventScheduled?.();
         } else {
-          const error = await res.json();
+          // const error = await res.json();
           setMessages(prev => [...prev, { role: 'assistant', text: 'Hmm, I tried to schedule it but ran into an issue.' }]);
         }
       } catch (err) {
