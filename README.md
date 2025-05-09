@@ -2,7 +2,7 @@
 
 ![planorama](https://github.com/user-attachments/assets/806542d8-32b1-4ac2-81d5-99284b8900a6)
 
-Planorama is a scheduling and booking application designed to streamline event management. It provides a user-friendly interface for creating, managing, and viewing bookings.
+Planorama is a scheduling and booking application designed to streamline event management. It provides a user-friendly interface for creating, managing, and viewing bookings. To delete events, right-click on the scheduled event and select OK.
 
 Link to application: [TBA]
 
@@ -129,16 +129,3 @@ To verify that events are being added to the local backend database:
     ```bash
     db.bookings.find()
     ```
-
-## Contributing
-
-We welcome contributions! To contribute:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Commit your changes and push them to your branch.
-4. Submit a pull request with a detailed description of your changes.
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
