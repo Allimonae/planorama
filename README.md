@@ -129,3 +129,7 @@ To verify that events are being added to the local backend database:
     ```bash
     db.bookings.find()
     ```
+
+## Note 
+
+The backend server is on PORT 4000 for Mac and code in the frontend has it set to PORT 5000. Changes need to be made to run locally for Mac. 
