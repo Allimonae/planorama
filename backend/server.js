@@ -20,10 +20,7 @@ app.use(cors());
 app.use(json());
 
 // MongoDB connection
-connect('mongodb://127.0.0.1:27017/scheduler', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+connect('mongodb://127.0.0.1:27017/scheduler')
 
 const db = connection;
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -82,11 +79,10 @@ app.post('/api/bookings', async (req, res) => {
     const newYorkEndTime = convertUTCToNY(endTime);
 
     const overlappingBooking = await Booking.findOne({
-      date: bookingDate,
       $or: [
         {
-          start: { $lt: newYorkStartTime },
-          end: { $gt: newYorkEndTime }
+          start: { $lt: new Date(end) },
+          end: { $gt: new Date(start) }
         }
       ]
     });
@@ -130,14 +126,17 @@ app.post('/api/ask', async (req, res) => {
   const { message, history } = req.body;
 
   try {
-    const today = new Date().toLocaleDateString('en-US', {
+    const now = new Date();
+    const currentDateTime = now.toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
       timeZone: 'America/New_York'
-    });
-
+    });    
+    
     const dbBookings = await Booking.find();
 
     const allEvents = dbBookings.map((e) => {
@@ -197,7 +196,7 @@ app.post('/api/ask', async (req, res) => {
     }).join('\n');
 
     const prompt = `
-    Today is ${today}.
+    Today is ${currentDateTime}.
     You are a calendar assistant. The user has the following events:
 
     ${eventsText}
