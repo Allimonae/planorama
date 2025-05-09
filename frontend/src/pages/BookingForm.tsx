@@ -133,8 +133,8 @@ const BookingForm = () => {
         setEventData(prev => ({
             ...prev,
             daysOfWeek: [],
-            startTime: prev.startTime ? '' : getTimeOnly(prev.start).toLocaleString(),
-            endTime: prev.endTime ? '' : getTimeOnly(prev.end).toLocaleString()
+            startTime: prev.startTime ? '' : getTimeOnly(prev.start),
+            endTime: prev.endTime ? '' : getTimeOnly(prev.end)
         }));
     };
     

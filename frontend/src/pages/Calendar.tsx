@@ -14,7 +14,6 @@ const Calendar = () => {
 
   const fetchEvents = async () => {
     try {
-      console.log("Client timezone now is:", new Date().toString());
       const response = await fetch('http://localhost:5000/api/bookings');
       const data = await response.json();
       setEvents(data);
@@ -35,29 +34,54 @@ const Calendar = () => {
   }, [location.state, navigate]);
 
   const handleDateClick = (arg: any) => {
-    const date = arg.dateStr;
-    navigate('/bookingform', { state: { date } });
+    navigate('/bookingform', { state: { date: arg.dateStr } });
   };
 
-    return (
-        <div>
-          <FullCalendar
-            ref={calendarRef}
-            plugins={[dayGridPlugin, interactionPlugin, timeGridPlugin]}
-            initialView="timeGridWeek"
-            dateClick={handleDateClick}
-            events={events}
-            headerToolbar={{
-              left: 'prev,next',
-              center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            }}
-            timeZone="America/New_York"
-            nowIndicator
-          />
-          <AssistantSidebar />
-        </div>
-      );
-    };
+  return (
+    <div>
+      <FullCalendar
+        ref={calendarRef}
+        plugins={[dayGridPlugin, interactionPlugin, timeGridPlugin]}
+        initialView="timeGridWeek"
+        dateClick={handleDateClick}
+        events={events}
+        headerToolbar={{
+          left: 'prev,next',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay',
+        }}
+        timeZone="America/New_York"
+        nowIndicator
+
+        eventDidMount={(info) => {
+          info.el.addEventListener('contextmenu', (e) => {
+            e.preventDefault(); // disable default right-click menu
+      
+            const confirmDelete = window.confirm(`Delete event: "${info.event.title}"?`);
+            if (confirmDelete) {
+              const eventId = info.event.id;
+              fetch(`http://localhost:5000/api/bookings/${eventId}`, {
+                method: 'DELETE'
+              })
+                .then((res) => {
+                  if (res.ok) {
+                    info.event.remove(); // remove from calendar UI
+                    alert('Event deleted!');
+                  } else {
+                    alert('Failed to delete event.');
+                  }
+                })
+                .catch((err) => {
+                  console.error('Delete error:', err);
+                  alert('Error deleting event.');
+                });
+              }
+          });
+        }}
+      />
+      <AssistantSidebar />
+    </div>
+  );
+};
 
 export default Calendar;

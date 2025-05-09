@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 
 const AssistantSidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([]);
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([
+    { role: 'assistant', text: "Hey there! I'm Sunny ☀️ — your AI assistant buddy. How can I help you today?" }
+  ]);  // initialize AI message
   const [input, setInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -56,7 +58,8 @@ const AssistantSidebar = () => {
 
       {/* Content */}
       <div className="p-4 flex flex-col h-full">
-        <h2 className="text-lg font-bold mb-4">AI Assistant</h2>
+        <h2 className="text-lg font-bold mb-4">AI Sunny</h2>
+         <h3 className="text-sm font-italics mb-3">Want to know what the best time to plan an event is? Ask your AI assistant!</h3>
 
         <div className="flex-1 overflow-y-auto space-y-2 mb-4 bg-gray-50 p-2 rounded">
           {messages.map((msg, idx) => (
