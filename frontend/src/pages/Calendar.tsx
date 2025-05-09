@@ -99,7 +99,7 @@ const Calendar = () => {
           });
         }}
       />
-      <AssistantSidebar />
+      <AssistantSidebar onEventScheduled={fetchEvents} />
     </div>
   );
 };
