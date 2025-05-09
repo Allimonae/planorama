@@ -36,5 +36,5 @@
     ```
 4. Start the backend server
     ```
-    npm start
+    node server.js 
     ```
