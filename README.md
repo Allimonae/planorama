@@ -71,7 +71,7 @@ Before you begin, ensure you have the following installed on your system:
     ```bash
     npm install
     ```
-3. Ensure your local MongoDB instance is running:
+3. Ensure your local MongoDB instance is running (for Mac):
     ```bash
     brew services start mongodb-community
     brew install mongosh
