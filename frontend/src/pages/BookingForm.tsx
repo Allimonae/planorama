@@ -201,7 +201,13 @@ const BookingForm = () => {
     // Handle Submit
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
+      
+        const newEvent = {
+          ...eventData,
+          id: Date.now().toString(),
+          //date: utcTime
+        };
+      
         try {
             const cleanData = {
                 ...eventData,
