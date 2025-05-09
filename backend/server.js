@@ -20,8 +20,13 @@ const app = express();
 app.use(cors());
 app.use(json());
 
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/scheduler"; 
+
+app.listen(MONGODB_URI, () => {console.log(`MongoDB connected to ${MONGODB_URI}`)});
+
 // MongoDB connection
-connect('mongodb://127.0.0.1:27017/scheduler', {
+connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
@@ -252,4 +257,4 @@ app.post('/api/ask', async (req, res) => {
     }
   });
   
-  module.exports = app;
+export default app;
