@@ -1,6 +1,10 @@
 # Planorama
 
+![planorama](https://github.com/user-attachments/assets/806542d8-32b1-4ac2-81d5-99284b8900a6)
+
 Planorama is a scheduling and booking application designed to streamline event management. It provides a user-friendly interface for creating, managing, and viewing bookings.
+
+Link to application: [TBA]
 
 ## Features
 
