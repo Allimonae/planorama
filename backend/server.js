@@ -28,7 +28,15 @@ app.listen(MONGODB_URI, () => {console.log(`MongoDB connected to ${MONGODB_URI}`
 // MongoDB connection
 connect(MONGODB_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
+  ssl: true,
+  sslValidate: false
+})
+.then(() => {
+  console.log("Connected to MongoDB!");
+})
+.catch((err) => {
+  console.error("MongoDB connection error:", err);
 });
 
 const db = connection;
