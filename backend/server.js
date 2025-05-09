@@ -252,3 +252,4 @@ app.post('/api/ask', async (req, res) => {
     }
   });
   
+  module.exports = app;
