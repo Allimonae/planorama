@@ -14,7 +14,7 @@ const Calendar = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/bookings');
+      const response = await fetch(`http://localhost:4000/api/bookings`);
       const data = await response.json();
 
       const adjustedEvents = data.map((event: any) => {
@@ -80,7 +80,7 @@ const Calendar = () => {
             const confirmDelete = window.confirm(`Delete event: "${info.event.title}"?`);
             if (confirmDelete) {
               const eventId = info.event.id;
-              fetch(`http://localhost:5000/api/bookings/${eventId}`, {
+              fetch(`http://localhost:4000/api/bookings/${eventId}`, {
                 method: 'DELETE'
               })
                 .then((res) => {
