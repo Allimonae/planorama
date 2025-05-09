@@ -31,6 +31,8 @@ const Calendar = () => {
           date: shiftedDate,
           start: shiftedStart,
           end: shiftedEnd,
+          startTime: !event.allDay && event.recurring ? shiftedStart : '',
+          endTime: !event.allDay && event.recurring ? shiftedEnd : '',
         };
       });
 
@@ -55,6 +57,16 @@ const Calendar = () => {
     navigate('/bookingform', { state: { date: arg.dateStr } });
   };
 
+  const test = [
+    {
+      groupId: 'blueEvents', // recurrent events in this group move together
+      daysOfWeek: [ '4', '5'],
+      start: '10:45:00',
+      end: '12:45:00',
+      startTime: '10:45:00',
+      endTime: '12:45:00'
+    },
+  ]
   return (
     <div>
       <FullCalendar
