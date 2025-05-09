@@ -381,7 +381,7 @@ const BookingForm = () => {
                     </div>
 
                     {/* Confirming form handling, comment out later */}
-                    <div className="booking-form-element">
+                    {/* <div className="booking-form-element">
                         <h1>Testing, comment out later</h1>
                         <p>Date: {eventData.date.toLocaleString()}</p>
                         <p>All day: {eventData.allDay ? 'true' : 'false'}</p>
@@ -392,7 +392,7 @@ const BookingForm = () => {
                         <p>Recurring end: {eventData.endTime ? eventData.endTime : 'false'}</p>
                         <p>Recurring days of week: {eventData.daysOfWeek}</p>
                         <p>Color: {eventData.backgroundColor}, {eventData.borderColor}</p>
-                    </div>
+                    </div> */}
 
                     {/* button - submit will tell you if booking was successful, and if not why (missing a field, time slot filled) */}
                     <div className='flex'>
