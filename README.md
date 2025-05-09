@@ -16,40 +16,71 @@ Before you begin, ensure you have the following installed on your system:
 - Node.js (v14 or higher)
 - npm (v6 or higher)
 - MongoDB (v4.4 or higher)
+# Planorama
 
-## Setup Instructions for running Frontend locally
+Planorama is a scheduling and booking application designed to streamline event management. It provides a user-friendly interface for creating, managing, and viewing bookings.
 
+## Features
+
+- User-friendly frontend built with modern web technologies.
+- Backend powered by Node.js and MongoDB for efficient data handling.
+- Real-time updates and seamless integration between frontend and backend.
+- Easy setup and deployment instructions.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed on your system:
+
+- Node.js (v14 or higher)
+- npm (v6 or higher)
+- MongoDB (v4.4 or higher)
+
+## Setup Instructions for Frontend
+
+1. Open terminal and navigate to the frontend directory:
+    ```bash
 1. Open terminal and navigate to the frontend directory:
     ```bash
     cd frontend
     ```
 2. Install the required packages:
     ```bash
+2. Install the required packages:
+    ```bash
     npm install
     ```
+3. Run the application:
 3. Run the application:
     ```bash
     npm run dev
     ```
 4. Open the local URL provided in the terminal in your web browser.
+4. Open the local URL provided in the terminal in your web browser.
 
-## Setup Instructions for running Backend locally
+## Setup Instructions for Backend
 
+1. Open terminal and navigate to the backend directory:
+    ```bash
 1. Open terminal and navigate to the backend directory:
     ```bash
     cd backend
     ```
 2. Install the required packages:
     ```bash
+2. Install the required packages:
+    ```bash
     npm install
     ```
-3. Ensure your local MongoDB instance is running (for Mac):
+3. Ensure your local MongoDB instance is running:
     ```bash
     brew services start mongodb-community
     brew install mongosh
     mongosh
     use scheduler
+    use scheduler
     ```
+4. Start the backend server:
+    ```bash
 4. Start the backend server:
     ```bash
     node server.js
@@ -114,7 +145,7 @@ frontend/
 
 ## Usage
 
-To verify that events are being added to the local backend database:
+To verify that events are being added to the backend:
 
 1. Open `mongosh` in your terminal.
 2. Switch to the `scheduler` database:
