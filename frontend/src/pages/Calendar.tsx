@@ -16,7 +16,25 @@ const Calendar = () => {
     try {
       const response = await fetch('http://localhost:5000/api/bookings');
       const data = await response.json();
-      setEvents(data);
+
+      const adjustedEvents = data.map((event) => {
+        const originalDate = new Date(event.date);
+        const originalStart = new Date(event.start);
+        const originalEnd = new Date(event.end);
+        
+        const shiftedDate = new Date(originalDate.getTime() - 4 * 60 * 60 * 1000);
+        const shiftedStart = new Date(originalStart.getTime() - 4 * 60 * 60 * 1000);
+        const shiftedEnd = new Date(originalEnd.getTime() - 4 * 60 * 60 * 1000);
+  
+        return {
+          ...event,
+          date: shiftedDate,
+          start: shiftedStart,
+          end: shiftedEnd,
+        };
+      });
+
+      setEvents(adjustedEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
     }
