@@ -110,9 +110,24 @@ app.post('/api/bookings', async (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
+
+  // DELETE ROUTE
+  app.delete('/api/bookings/:id', async (req, res) => {
+    try {
+      const result = await Booking.findByIdAndDelete(req.params.id);
+      if (!result) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+      res.json({ message: 'Event deleted successfully' });
+    } catch (err) {
+      console.error('Error deleting event:', err);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
 // ROUTE FOR AI ASSISTANT REQUESTS
 app.post('/api/ask', async (req, res) => {
-  const { message } = req.body;
+  const { message, history } = req.body;
 
   try {
     const today = new Date().toLocaleDateString('en-US', {
@@ -126,10 +141,10 @@ app.post('/api/ask', async (req, res) => {
     const dbBookings = await Booking.find();
 
     const allEvents = dbBookings.map((e) => {
-      const nyDate = new Date(e.date);
       const nyStart = new Date(e.start);
       const nyEnd = new Date(e.end);
-    
+      const nyDate = new Date(e.date);
+
       return {
         title: e.title,
         date: nyDate,
@@ -144,7 +159,7 @@ app.post('/api/ask', async (req, res) => {
           timeZone: 'America/New_York'
         })
       };
-    });    
+    });
 
     const weatherForecast = await getWeatherForecast(40.7128, -74.0060);
     console.log("Weather forecast data:", weatherForecast);
@@ -197,20 +212,30 @@ app.post('/api/ask', async (req, res) => {
     User: ${message}
     `;
 
+    const chatHistory = [
+      {
+        role: 'system',
+        content: `Your name is Sunny. You are a friendly, upbeat AI calendar assistant who helps users schedule events.
+        Always speak in a cheerful, welcoming tone using casual, natural language.
+        If the user asks to schedule something during a time that’s already booked, politely inform them of the conflict.
+        If the time is free, suggest a time naturally and include the following hidden HTML comment exactly once in your reply:
+        <!-- SUGGESTED_EVENT: { "title": "Event Title", "start": "2025-05-10T14:00:00", "end": "2025-05-10T16:00:00" } -->
+        
+        Do NOT mention the comment or the word 'JSON' to the user. Only include it once per suggestion.
+        
+        If the user replies with 'yes', 'sure', or another confirmation, they want to schedule it.
+        
+        Let the frontend handle the rest.
+        
+        Stay helpful, kind, and respectful at all times. `
+      },
+      ...(history || []).map(m => ({ role: m.role, content: m.text })),
+      { role: 'user', content: prompt }
+    ];
+
     const chatResponse = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: `Your name is Sunny. You are a friendly, upbeat AI calendar assistant who helps users schedule events.
-          Always speak in a cheerful, welcoming tone using casual, natural language.
-          If the user asks to schedule something during a time that’s already booked, politely inform them of the conflict.
-          If the time is free, encourage them to go ahead with scheduling.
-          If the request is unclear or outside the calendar's scope, gently ask for clarification.
-          Stay helpful, kind, and respectful at all times.`
-        },
-        { role: 'user', content: prompt }
-      ]
+      messages: chatHistory
     });
 
     const reply = chatResponse.choices[0].message.content;
@@ -220,21 +245,25 @@ app.post('/api/ask', async (req, res) => {
     console.error('OpenAI error:', err);
     res.status(500).json({ message: 'Something went wrong talking to the assistant.' });
   }
-
 });
 
 
-  // DELETE ROUTE
-  app.delete('/api/bookings/:id', async (req, res) => {
-    try {
-      const result = await Booking.findByIdAndDelete(req.params.id);
-      if (!result) {
-        return res.status(404).json({ message: 'Event not found' });
-      }
-      res.json({ message: 'Event deleted successfully' });
-    } catch (err) {
-      console.error('Error deleting event:', err);
-      res.status(500).json({ message: err.message });
-    }
-  });
-  
+app.post('/api/bookings/auto', async (req, res) => {
+  try {
+    const { title, start, end } = req.body;
+
+    const newBooking = new Booking({
+      title,
+      start: new Date(start),
+      end: new Date(end),
+      date: new Date(start), // store the day of the event
+      allDay: false
+    });
+
+    await newBooking.save();
+    res.status(201).json({ message: 'Event scheduled by Sunny!' });
+  } catch (err) {
+    console.error('Auto-scheduling error:', err);
+    res.status(500).json({ message: 'Failed to schedule event.' });
+  }
+});

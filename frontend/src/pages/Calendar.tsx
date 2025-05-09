@@ -17,7 +17,7 @@ const Calendar = () => {
       const response = await fetch('http://localhost:5000/api/bookings');
       const data = await response.json();
 
-      const adjustedEvents = data.map((event) => {
+      const adjustedEvents = data.map((event: any) => {
         const originalDate = new Date(event.date);
         const originalStart = new Date(event.start);
         const originalEnd = new Date(event.end);
@@ -97,7 +97,7 @@ const Calendar = () => {
           });
         }}
       />
-      <AssistantSidebar />
+      <AssistantSidebar onEventScheduled={fetchEvents} />
     </div>
   );
 };
