@@ -36,5 +36,13 @@
     ```
 4. Start the backend server
     ```
-    npm start
+    node server.js
     ```
+
+## To See That Events Are Added to the Backend: 
+
+1. mongosh 
+
+2. use scheduler 
+
+3. db.bookings.find()
