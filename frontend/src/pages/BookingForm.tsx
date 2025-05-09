@@ -45,12 +45,12 @@ const BookingForm = () => {
     const date = location.state?.date;
     const navigate = useNavigate();
 
-    const getTimeOnly = (date: Date) => {
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-        const seconds = date.getSeconds().toString().padStart(2, '0');
-        return `${hours}:${minutes}:${seconds}`;
-    };
+    // const getTimeOnly = (date: Date) => {
+    //     const hours = date.getHours().toString().padStart(2, '0');
+    //     const minutes = date.getMinutes().toString().padStart(2, '0');
+    //     const seconds = date.getSeconds().toString().padStart(2, '0');
+    //     return `${hours}:${minutes}:${seconds}`;
+    // };
 
     interface EventData {
         date: Date;
@@ -81,8 +81,8 @@ const BookingForm = () => {
             end: endDate,
             title: '',
             daysOfWeek: [],
-            // startTime: '',
-            // endTime: '',
+            startTime: '',
+            endTime: '',
             startRecur: parsedDate,
             endRecur: endRecurDate,
             groupId: '',

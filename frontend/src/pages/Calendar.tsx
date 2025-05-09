@@ -17,7 +17,7 @@ const Calendar = () => {
       const response = await fetch('http://localhost:5000/api/bookings');
       const data = await response.json();
 
-      const adjustedEvents = data.map((event) => {
+      const adjustedEvents = data.map((event: any) => {
         const originalDate = new Date(event.date);
         const originalStart = new Date(event.start);
         const originalEnd = new Date(event.end);
@@ -57,16 +57,6 @@ const Calendar = () => {
     navigate('/bookingform', { state: { date: arg.dateStr } });
   };
 
-  const test = [
-    {
-      groupId: 'blueEvents', // recurrent events in this group move together
-      daysOfWeek: [ '4', '5'],
-      start: '10:45:00',
-      end: '12:45:00',
-      startTime: '10:45:00',
-      endTime: '12:45:00'
-    },
-  ]
   return (
     <div>
       <FullCalendar
