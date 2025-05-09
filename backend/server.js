@@ -101,8 +101,8 @@ app.post('/api/bookings', async (req, res) => {
     const overlappingBooking = await Booking.findOne({
       $or: [
         {
-          start: { $lt: newYorkStartTime },
-          end: { $gt: newYorkEndTime }
+          start: { $lt: new Date(end) },
+          end: { $gt: new Date(start) }
         }
       ]
     });
@@ -155,13 +155,19 @@ app.post('/api/ask', async (req, res) => {
   try {
     const now = new Date();
     const currentDateTime = now.toLocaleString('en-US', {
+    const now = new Date();
+    const currentDateTime = now.toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
       timeZone: 'America/New_York'
+    });    
+    
     });    
     
     const dbBookings = await Booking.find();
