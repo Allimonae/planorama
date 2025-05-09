@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function extractSuggestedEventFromReply(reply: string): { title: string; start: string; end: string } | null {
   const match = reply.match(/<!--\s*SUGGESTED_EVENT:\s*(\{.*?\})\s*-->/);
@@ -16,9 +16,17 @@ const confirmationPhrases = ['yes', 'yeah', 'yep', 'sure', 'go ahead', 'do it', 
 
 const AssistantSidebar = ({ onEventScheduled }: { onEventScheduled?: () => void }) => {
   const [isOpen, setIsOpen] = useState(true);
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([
-    { role: 'assistant', text: "Hey there! I'm Sunny, your AI assistant buddy! ☀️ How can I help you today?" }
-  ]);
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>(() => {
+    const saved = localStorage.getItem('sunny_messages');
+    return saved ? JSON.parse(saved) : [
+      { role: 'assistant', text: "Hey there! I'm Sunny, your AI assistant buddy! ☀️ How can I help you today?" }
+    ];
+  });  
+
+  useEffect(() => {
+    localStorage.setItem('sunny_messages', JSON.stringify(messages));
+  }, [messages]);
+
   const [input, setInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [suggestedEvent, setSuggestedEvent] = useState<{ title: string; start: string; end: string } | null>(null);
@@ -26,12 +34,12 @@ const AssistantSidebar = ({ onEventScheduled }: { onEventScheduled?: () => void 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-
+  
     const userMessage = input.trim();
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setInput('');
-
-    // Check for confirmation if we have a suggestion waiting
+  
+    // ✅ 1. Check for confirmation BEFORE contacting assistant
     if (suggestedEvent && confirmationPhrases.some(phrase => userMessage.toLowerCase().includes(phrase))) {
       try {
         const res = await fetch('http://localhost:5000/api/bookings/auto', {
@@ -39,11 +47,11 @@ const AssistantSidebar = ({ onEventScheduled }: { onEventScheduled?: () => void 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(suggestedEvent)
         });
-
+  
         if (res.ok) {
           setMessages(prev => [...prev, { role: 'assistant', text: `✅ Got it! I’ve scheduled "${suggestedEvent.title}" for you.` }]);
-          setSuggestedEvent(null); // clear suggestion
-          onEventScheduled?.(); 
+          setSuggestedEvent(null);
+          onEventScheduled?.();
         } else {
           const error = await res.json();
           setMessages(prev => [...prev, { role: 'assistant', text: 'Hmm, I tried to schedule it but ran into an issue.' }]);
@@ -52,9 +60,10 @@ const AssistantSidebar = ({ onEventScheduled }: { onEventScheduled?: () => void 
         console.error('Auto-scheduling error:', err);
         setMessages(prev => [...prev, { role: 'assistant', text: 'Something went wrong trying to schedule the event.' }]);
       }
-      return;
+      return; // ✅ don't send to assistant if we handled it here
     }
-
+  
+    // 🧠 Only reach here if it wasn't a confirmation message
     try {
       setIsLoading(true);
       const res = await fetch('http://localhost:5000/api/ask', {
@@ -64,7 +73,7 @@ const AssistantSidebar = ({ onEventScheduled }: { onEventScheduled?: () => void 
       });
       const data = await res.json();
       setIsLoading(false);
-
+  
       if (data.reply) {
         setMessages(prev => [...prev, { role: 'assistant', text: data.reply }]);
         const parsed = extractSuggestedEventFromReply(data.reply);
@@ -78,7 +87,7 @@ const AssistantSidebar = ({ onEventScheduled }: { onEventScheduled?: () => void 
       console.error('Error talking to assistant:', error);
       setMessages(prev => [...prev, { role: 'assistant', text: 'Something went wrong talking to the assistant.' }]);
     }
-  };
+  };  
 
   return (
     <div
@@ -92,7 +101,21 @@ const AssistantSidebar = ({ onEventScheduled }: { onEventScheduled?: () => void 
       </button>
 
       <div className="p-4 flex flex-col h-full">
-        <h2 className="text-lg font-bold mb-4">Sunny AI</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold">Sunny AI</h2>
+        <button
+        className="text-sm text-blue-600 hover:underline"
+        onClick={() => {
+          localStorage.removeItem('sunny_messages');
+          setMessages([
+            { role: 'assistant', text: "Hey there! I'm Sunny, your AI assistant buddy! ☀️ How can I help you today?" }
+          ]);
+          setSuggestedEvent(null);
+        }}
+        >
+          Clear conversation
+          </button>
+          </div>
         <h3 className="text-sm italic mb-3">Want to know the best time to plan an event? Ask your AI assistant!</h3>
 
         <div className="flex-1 overflow-y-auto space-y-2 mb-4 bg-gray-50 p-2 rounded">
