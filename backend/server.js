@@ -3,19 +3,14 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
-import { Readable } from 'stream';
-import fetch from 'node-fetch';
-import csv from 'csv-parser';
 import { OpenAI } from 'openai';
+import { getWeatherForecast } from './weather.js';
 
 dotenv.config();
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
-
-const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdfuwB5qRixGAcF7Ma_F8vmCk-Pl2Te20F3UsAbUEgwop4Jp5SMJEe0H-QZTRzWecAx2WlXWphYeXR/pub?output=csv';
-
 
 const { connect, connection, Schema, model } = mongoose;
 const { json } = bodyParser;
@@ -42,8 +37,8 @@ const bookingSchema = new Schema({
   start: Date,
   end: Date,
   daysOfWeek: [Number],
-  startTime: String,
-  endTime: String,
+  startTime: Date,
+  endTime: Date,
   startRecur: Date,
   endRecur: Date,
   groupId: String
@@ -51,49 +46,61 @@ const bookingSchema = new Schema({
 
 const Booking = model('Booking', bookingSchema);
 
-// GET route: Combine DB + CSV
+// GET route: DB only
 app.get('/api/bookings', async (req, res) => {
   try {
-    const response = await fetch(csvUrl);
-    const csvText = await response.text();
-
-    const events = [];
-
-    const stream = Readable.from([csvText]);
-    stream
-      .pipe(csv())
-      .on('data', (data) => {
-        events.push({
-          id: data.id,
-          title: data.title,
-          date: new Date(data.date),
-          allDay: data.allDay === 'TRUE',
-          start: new Date(data.start),
-          end: new Date(data.end),
-          daysOfWeek: data.daysOfWeek ? data.daysOfWeek.split(',').map(Number) : [],
-          startTime: data.startTime || '',
-          endTime: data.endTime || '',
-          startRecur: data.startRecur ? new Date(data.startRecur) : null,
-          endRecur: data.endRecur ? new Date(data.endRecur) : null,
-          groupId: data.groupId || ''
-        });
-      })
-      .on('end', async () => {
-        const dbBookings = await Booking.find();
-        res.json([...dbBookings, ...events]);
-      });
+    const dbBookings = await Booking.find();
+    const formattedDbBookings = dbBookings.map(b => ({
+      id: b._id.toString(),
+      title: b.title,
+      start: b.start?.toISOString(),
+      end: b.end?.toISOString(),
+      allDay: b.allDay || false
+    }));
+    res.json(formattedDbBookings);
   } catch (err) {
-    console.error("Error fetching CSV or DB data:", err);
+    console.error("Error fetching DB data:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
+function convertUTCToNY(utcDateStr) {
+  const utcDate = new Date(utcDateStr);
+  return utcDate.toLocaleString('en-US', { timeZone: 'America/New_York' });
+}
+
 // POST route
 app.post('/api/bookings', async (req, res) => {
   try {
+    const { title, date, start, end } = req.body;
+
+    const bookingDate = new Date(date);
+    const startTime = new Date(start);
+    const endTime = new Date(end);
+
+    const newYorkStartTime = convertUTCToNY(startTime);
+    const newYorkEndTime = convertUTCToNY(endTime);
+
+    const overlappingBooking = await Booking.findOne({
+      date: bookingDate,
+      $or: [
+        {
+          start: { $lt: newYorkStartTime },
+          end: { $gt: newYorkEndTime }
+        }
+      ]
+    });
+
+    if (overlappingBooking) {
+      return res.status(400).json({
+        message: 'This time slot overlaps with another booking.'
+      });
+    }
+
     const booking = new Booking(req.body);
     const saved = await booking.save();
     res.status(201).json(saved);
+
   } catch (err) {
     console.error('Error saving booking:', err);
     res.status(400).json({ message: err.message });
@@ -103,13 +110,11 @@ app.post('/api/bookings', async (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-
 // ROUTE FOR AI ASSISTANT REQUESTS
 app.post('/api/ask', async (req, res) => {
   const { message } = req.body;
 
   try {
-    // Get today's date in America/New_York timezone
     const today = new Date().toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -118,44 +123,52 @@ app.post('/api/ask', async (req, res) => {
       timeZone: 'America/New_York'
     });
 
-    // Fetch DB events
     const dbBookings = await Booking.find();
 
-    // Fetch and parse CSV events
-    const response = await fetch(csvUrl);
-    const csvText = await response.text();
-    const csvEvents = [];
-
-    const stream = Readable.from([csvText]);
-    await new Promise((resolve, reject) => {
-      stream
-        .pipe(csv())
-        .on('data', (data) => {
-          const parsedDate = new Date(data.date);
-          csvEvents.push({
-            title: data.title,
-            date: !isNaN(parsedDate) ? parsedDate.toISOString() : null,
-            start: data.startTime,
-            end: data.endTime
-          });
-          
-        })
-        .on('end', resolve)
-        .on('error', reject);
-    });
-
-    // Combine and format all events
-    const allEvents = [
-      ...dbBookings.map((e) => ({
+    const allEvents = dbBookings.map((e) => {
+      const nyDate = new Date(e.date);
+      const nyStart = new Date(e.start);
+      const nyEnd = new Date(e.end);
+    
+      return {
         title: e.title,
-        date: e.date.toLocaleDateString(), // otherwise the timezones don't match
-        start: e.startTime,
-        end: e.endTime
-      })),
-      ...csvEvents
-    ];
+        date: nyDate,
+        start: nyStart.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'America/New_York'
+        }),
+        end: nyEnd.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'America/New_York'
+        })
+      };
+    });    
 
-    // Format for prompt: readable and normalized
+    const weatherForecast = await getWeatherForecast(40.7128, -74.0060);
+    console.log("Weather forecast data:", weatherForecast);
+
+    let weatherSummary = '';
+    if (weatherForecast) {
+      weatherSummary = weatherForecast.slice(0, 7).map(day => {
+        const date = new Date(day.dt * 1000).toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          timeZone: 'America/New_York'
+        });
+
+        const description = day.weather[0].description;
+        const temp = Math.round(day.temp.day);
+        const chanceOfRain = Math.round(day.pop * 100);
+
+        return `• ${date}: ${description}, around ${temp}°F, ${chanceOfRain}% chance of rain.`;
+      }).join('\n');
+    } else {
+      weatherSummary = 'Weather data is currently unavailable.';
+    }
+
     const eventsText = allEvents.map((e) => {
       const formattedDate = new Date(e.date).toLocaleDateString('en-US', {
         weekday: 'long',
@@ -168,26 +181,33 @@ app.post('/api/ask', async (req, res) => {
       return `• ${e.title} on ${formattedDate} from ${e.start || 'N/A'} to ${e.end || 'N/A'}`;
     }).join('\n');
 
-    // Prompt for OpenAI
     const prompt = `
-Today is ${today}.
-You are a calendar assistant. The user has the following events:
+    Today is ${today}.
+    You are a calendar assistant. The user has the following events:
 
-${eventsText}
+    ${eventsText}
 
-Answer the following question using only the data above. If nothing matches, say so:
+    The 7-day weather forecast is:
+    ${weatherSummary}
 
-User: ${message}
-`;
+    Answer the user's question based on both the schedule and weather.
+    If the user wants to schedule something outdoors, and it’s rainy or cold (below 50°F), warn them.
+    Otherwise, help them find a good time.
+
+    User: ${message}
+    `;
 
     const chatResponse = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { 
-          role: 'system', 
-          content: `You are a cheerful, friendly AI assistant that helps users manage their calendar. 
-          You speak in an upbeat, encouraging tone, and use casual phrasing when appropriate. 
-          Always stay helpful, polite, and make the user feel welcome.` 
+        {
+          role: 'system',
+          content: `Your name is Sunny. You are a friendly, upbeat AI calendar assistant who helps users schedule events.
+          Always speak in a cheerful, welcoming tone using casual, natural language.
+          If the user asks to schedule something during a time that’s already booked, politely inform them of the conflict.
+          If the time is free, encourage them to go ahead with scheduling.
+          If the request is unclear or outside the calendar's scope, gently ask for clarification.
+          Stay helpful, kind, and respectful at all times.`
         },
         { role: 'user', content: prompt }
       ]
@@ -200,4 +220,21 @@ User: ${message}
     console.error('OpenAI error:', err);
     res.status(500).json({ message: 'Something went wrong talking to the assistant.' });
   }
+
 });
+
+
+  // DELETE ROUTE
+  app.delete('/api/bookings/:id', async (req, res) => {
+    try {
+      const result = await Booking.findByIdAndDelete(req.params.id);
+      if (!result) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+      res.json({ message: 'Event deleted successfully' });
+    } catch (err) {
+      console.error('Error deleting event:', err);
+      res.status(500).json({ message: err.message });
+    }
+  });
+  
