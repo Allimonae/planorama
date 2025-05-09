@@ -36,5 +36,5 @@
     ```
 4. Start the backend server
     ```
-    node server.js 
+    node server.js
     ```
