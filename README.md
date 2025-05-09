@@ -17,7 +17,7 @@ Before you begin, ensure you have the following installed on your system:
 - npm (v6 or higher)
 - MongoDB (v4.4 or higher)
 
-## Setup Instructions for Frontend
+## Setup Instructions for running Frontend locally
 
 1. Open terminal and navigate to the frontend directory:
     ```bash
@@ -33,7 +33,7 @@ Before you begin, ensure you have the following installed on your system:
     ```
 4. Open the local URL provided in the terminal in your web browser.
 
-## Setup Instructions for Backend
+## Setup Instructions for running Backend locally
 
 1. Open terminal and navigate to the backend directory:
     ```bash
@@ -114,7 +114,7 @@ frontend/
 
 ## Usage
 
-To verify that events are being added to the backend:
+To verify that events are being added to the local backend database:
 
 1. Open `mongosh` in your terminal.
 2. Switch to the `scheduler` database:
