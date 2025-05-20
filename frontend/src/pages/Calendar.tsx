@@ -14,7 +14,9 @@ const Calendar = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch('https://planorama-swg9.onrender.com/');
+      // Use https://planorama-swg9.onrender.com/ for deployment
+      // Use local backend for development
+      const response = await fetch('http://localhost:4000/api/bookings');
       const data = await response.json();
 
       const adjustedEvents = data.map((event: any) => {
@@ -80,7 +82,7 @@ const Calendar = () => {
             const confirmDelete = window.confirm(`Delete event: "${info.event.title}"?`);
             if (confirmDelete) {
               const eventId = info.event.id;
-              fetch(`https://planorama-swg9.onrender.com/api/bookings/${eventId}`, {
+              fetch(`http://localhost:4000/api/bookings/${eventId}`, {
                 method: 'DELETE'
               })
                 .then((res) => {

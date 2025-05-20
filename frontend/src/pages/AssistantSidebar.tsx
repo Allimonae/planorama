@@ -42,7 +42,7 @@ const AssistantSidebar = ({ onEventScheduled }: { onEventScheduled?: () => void 
     // ✅ 1. Check for confirmation BEFORE contacting assistant
     if (suggestedEvent && confirmationPhrases.some(phrase => userMessage.toLowerCase().includes(phrase))) {
       try {
-        const res = await fetch('http://localhost:5000/api/bookings/auto', {
+        const res = await fetch('http://localhost:4000/api/bookings/auto', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(suggestedEvent)
@@ -66,7 +66,7 @@ const AssistantSidebar = ({ onEventScheduled }: { onEventScheduled?: () => void 
     // 🧠 Only reach here if it wasn't a confirmation message
     try {
       setIsLoading(true);
-      const res = await fetch('http://localhost:5000/api/ask', {
+      const res = await fetch('http://localhost:4000/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage, history: messages }),
