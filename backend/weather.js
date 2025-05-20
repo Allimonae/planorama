@@ -1,8 +1,11 @@
 import fetch from 'node-fetch';
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export async function getWeatherForecast(lat, lon) {
-  const apiKey = process.env.OPENWEATHER_API_KEY;
-  const url = `https://api.openweathermap.org/data/3.0/onecall?lat=40.7128&lon=-74.0060&exclude=minutely,hourly,alerts&units=imperial&appid=036506298a139e4b9e2448051e0407f8`;
+  const url =
+    process.env.OPENWEATHER_API_URL;
 
   try {
     const response = await fetch(url);
