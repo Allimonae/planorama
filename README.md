@@ -67,7 +67,6 @@ The project is organized into the following directories and files:
 planorama-slides.pdf
 README.md
 backend/
-    allisonkey.txt
     dummyEvents.json
     package.json
     server.js
